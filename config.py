@@ -13,7 +13,7 @@ class ConfigClass(object):
     ADMIN_USERNAME = "stage-admin"
     ADMIN_PASSWORD = "admin"
     PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{8,16}$"
-    NEO4J_SERVICE = "http://graphapi.utility:5062/v1/neo4j/"
+    NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
     api_modules = ["users"]
     JWT_AUTH_URL_RULE = None
     env = os.environ.get('env')
