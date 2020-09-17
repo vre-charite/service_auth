@@ -18,9 +18,9 @@ class ConfigClass(object):
     JWT_AUTH_URL_RULE = None
     env = os.environ.get('env')
     if env is None or env == 'charite':
-        KEYCLOAK_VRE_SECRET = "9f06a414-8e5f-472b-a161-7b21fcd30078"
+        KEYCLOAK_VRE_SECRET = "aeeddce5-b0cd-4a4c-9f6d-66b771692724"
         KEYCLOAK = {
-            "vre": ["kong", "9f06a414-8e5f-472b-a161-7b21fcd30078"]
+            "vre": ["kong", "aeeddce5-b0cd-4a4c-9f6d-66b771692724"]
         }
     elif env == 'staging':
         KEYCLOAK_VRE_SECRET = "17b2f5a7-64ba-4ab3-a392-d497c6d50848"
