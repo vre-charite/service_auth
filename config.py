@@ -17,13 +17,18 @@ class ConfigClass(object):
     api_modules = ["users"]
     JWT_AUTH_URL_RULE = None
     env = os.environ.get('env')
-    if env is None or env == 'dev':
-        KEYCLOAK_VRE_SECRET = "d2f56cf0-120d-499a-b525-9f26f7a0274f"
+    if env is None or env == 'charite':
+        KEYCLOAK_VRE_SECRET = "9f06a414-8e5f-472b-a161-7b21fcd30078"
         KEYCLOAK = {
-            "testrealms": ["kong", "d2f56cf0-120d-499a-b525-9f26f7a0274f"]
+            "vre": ["kong", "9f06a414-8e5f-472b-a161-7b21fcd30078"]
         }
-    else:
+    elif env == 'staging':
         KEYCLOAK_VRE_SECRET = "17b2f5a7-64ba-4ab3-a392-d497c6d50848"
         KEYCLOAK = {
-            "testrealms": ["kong", "17b2f5a7-64ba-4ab3-a392-d497c6d50848"]
+            "vre": ["kong", "17b2f5a7-64ba-4ab3-a392-d497c6d50848"]
+        }
+    else:
+        KEYCLOAK_VRE_SECRET = "d2f56cf0-120d-499a-b525-9f26f7a0274f"
+        KEYCLOAK = {
+            "vre": ["kong", "d2f56cf0-120d-499a-b525-9f26f7a0274f"]
         }

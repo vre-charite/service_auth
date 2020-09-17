@@ -55,7 +55,7 @@ class UserAuth(Resource):
                 res.set_result('Missing required information')
                 res.set_code(EAPIResponseCode.bad_request)
                 return res.response, res.code
-            if not realm or not realm in ConfigClass.KEYCLOAK.keys():
+            if not realm or realm not in ConfigClass.KEYCLOAK.keys():
                 res.set_result('Invaild realm')
                 res.set_code(EAPIResponseCode.bad_request)
                 return res.response, res.code
@@ -128,7 +128,7 @@ class UserRefresh(Resource):
                 res.set_result('Missing refresh token')
                 res.set_code(EAPIResponseCode.bad_request)
                 return res.response, res.code
-            if not realm or not realm in ConfigClass.KEYCLOAK.keys():
+            if not realm or realm not in ConfigClass.KEYCLOAK.keys():
                 res.set_result('Invaild realm')
                 res.set_code(EAPIResponseCode.bad_request)
                 return res.response, res.code

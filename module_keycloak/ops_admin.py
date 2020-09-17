@@ -9,8 +9,8 @@ class OperationsAdmin:
         server_url=ConfigClass.KEYCLOAK_SERVER_URL, 
         username=ConfigClass.ADMIN_USERNAME, 
         password=ConfigClass.ADMIN_PASSWORD,
-        client_id=ConfigClass.KEYCLOAK['testrealms'][0],
-        client_secret_key=ConfigClass.KEYCLOAK['testrealms'][1], 
+        client_id=ConfigClass.KEYCLOAK['vre'][0],
+        client_secret_key=ConfigClass.KEYCLOAK['vre'][1], 
         verify=True):
         self.keycloak_admin = KeycloakAdmin(
             server_url=server_url,
