@@ -23,12 +23,12 @@ class ConfigClass(object):
             "vre": ["kong", "aeeddce5-b0cd-4a4c-9f6d-66b771692724"]
         }
     elif env == 'staging':
-        KEYCLOAK_VRE_SECRET = "17b2f5a7-64ba-4ab3-a392-d497c6d50848"
+        KEYCLOAK_VRE_SECRET = "6f595e33-3c8c-496f-b71e-af47f2e73667"
         KEYCLOAK = {
-            "vre": ["kong", "17b2f5a7-64ba-4ab3-a392-d497c6d50848"]
+            "vre": ["kong", "6f595e33-3c8c-496f-b71e-af47f2e73667"]
         }
     else:
-        KEYCLOAK_VRE_SECRET = "d2f56cf0-120d-499a-b525-9f26f7a0274f"
+        KEYCLOAK_VRE_SECRET = "6f6b374b-1da9-4f77-b678-be48606e9905"
         KEYCLOAK = {
-            "vre": ["kong", "d2f56cf0-120d-499a-b525-9f26f7a0274f"]
+            "vre": ["kong", "6f6b374b-1da9-4f77-b678-be48606e9905"]
         }
