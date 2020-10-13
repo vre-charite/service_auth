@@ -1,4 +1,6 @@
 from flask_restx import Api, Resource, fields
+from services.logger_services.logger_factory_service import SrvLoggerFactory
+
 # from flask_restful import Api
 module_api = Api(
     version='1.0', 
@@ -9,6 +11,7 @@ module_api = Api(
 
 # api = Api()
 api = module_api.namespace('user_management', description='Operation on users', path ='/')
+api.logger.addHandler(SrvLoggerFactory("auth").get_logger())
 
 
 # user operations
@@ -20,6 +23,6 @@ api.add_resource(UserPassword, '/v1/users/password')
 # admin-only operations 
 
 from users.ops_admin import CreateUser, GetUserByUsername, GetUserByEmail
+api.add_resource(GetUserByUsername, '/v1/users/name')
 api.add_resource(CreateUser, '/v1/admin/users')
-api.add_resource(GetUserByUsername, '/v1/admin/users/name')
 api.add_resource(GetUserByEmail,'/v1/admin/users/email')

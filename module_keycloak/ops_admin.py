@@ -58,6 +58,12 @@ class OperationsAdmin:
         user = self.keycloak_admin.get_user(userid)
         return user
 
+     # Get user by email
+    def get_user_by_email(self, email):
+        users = self.keycloak_admin.get_users({"email": email})
+        # Loop through search results and only return an exact match
+        return next((user for user in users if user["email"] == email), None)
+
     # Set password for user
     def set_user_password(self, userid, password, temporary):
         res = self.keycloak_admin.set_user_password(userid, password, temporary)

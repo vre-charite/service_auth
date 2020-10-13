@@ -10,13 +10,25 @@ class ConfigClass(object):
     # KEYCLOAK_USER_URL = "http://10.3.7.223:8080/auth/admin/realms/{}/users"
     KEYCLOAK_VRE_CLIENT_ID = "kong"
     KEYCLOAK_GRANT_TYPE = "password"
-    ADMIN_USERNAME = "stage-admin"
+    ADMIN_USERNAME = "admin"
     ADMIN_PASSWORD = "admin"
     PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{8,16}$"
     NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
     api_modules = ["users"]
     JWT_AUTH_URL_RULE = None
     env = os.environ.get('env')
+
+    # BFF RDS
+    RDS_HOST = "opsdb.utility"
+    RDS_PORT = "5432"
+    RDS_DBNAME = "INDOC_VRE"
+    RDS_USER = "postgres"
+    RDS_PWD = "postgres"
+    if env is None or env == 'charite':
+        RDS_USER = "indoc_vre"
+        RDS_PWD = "opsdb-jrjmfa9svvC"
+    RDS_SCHEMA_DEFAULT = "indoc_vre"
+
     if env is None or env == 'charite':
         KEYCLOAK_VRE_SECRET = "aeeddce5-b0cd-4a4c-9f6d-66b771692724"
         KEYCLOAK = {

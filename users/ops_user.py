@@ -44,6 +44,7 @@ class UserAuth(Resource):
     @api.expect(payload)
     @api.response(200, sample_return)
     def post(self):
+        api.logger.info('Calling UserAuth post')
         try:
             res = APIResponse()
             post_data = request.get_json()
@@ -54,10 +55,12 @@ class UserAuth(Resource):
             if not username or not password :
                 res.set_result('Missing required information')
                 res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info('Username or Password missing on request')
                 return res.response, res.code
             if not realm or realm not in ConfigClass.KEYCLOAK.keys():
                 res.set_result('Invaild realm')
                 res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info(f'Invalid realm: {realm}')
                 return res.response, res.code
 
             client_id = ConfigClass.KEYCLOAK[realm][0]
@@ -71,19 +74,24 @@ class UserAuth(Resource):
             token = user_client.get_token(username, password)
             res.set_result(token)
             res.set_code(EAPIResponseCode.success)
+            api.logger.info(f'UserAuth Successful for {username} on realm {realm}')
             return res.response, res.code
         except exceptions.KeycloakAuthenticationError as err:
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
+            api.logger.error(str(error_msg))
             return {"result": str(error_msg)}, err_code
         except exceptions.KeycloakGetError as err:
             print(err)
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
+            api.logger.error(str(error_msg))
             return {"result": str(error_msg)}, err_code
         except Exception as e:
-            res.set_result(f'User authentication failed : {e}')
+            error_msg = f'User authentication failed : {e}'
+            res.set_result(error_msg)
             res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
             return res.response, res.code
 
 
@@ -119,18 +127,22 @@ class UserRefresh(Resource):
     @api.expect(payload)
     @api.response(200, sample_return)
     def post(self):
+        api.logger.info('Calling UserRefresh post')
         try:
             res = APIResponse()
             post_data = request.get_json()
             token = post_data.get('refreshtoken', None)
             realm = post_data.get('realm', None) 
             if not token:
-                res.set_result('Missing refresh token')
+                error_msg = 'Missing refresh token'
+                res.set_result(error_msg)
                 res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info(error_msg)
                 return res.response, res.code
             if not realm or realm not in ConfigClass.KEYCLOAK.keys():
                 res.set_result('Invaild realm')
                 res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info(f'Invalid realm: {realm}')
                 return res.response, res.code
 
             client_id = ConfigClass.KEYCLOAK[realm][0]
@@ -142,15 +154,19 @@ class UserRefresh(Resource):
             token = user_client.get_refresh_token(token)
             res.set_result(token)
             res.set_code(EAPIResponseCode.success)
+            api.logger.info('UserRefresh Successful')
             return res.response, res.code
 
         except exceptions.KeycloakGetError as err:
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
+            api.logger.error(str(error_msg))
             return {"result": str(error_msg)}, err_code
         except Exception as e:
-            res.set_result(f'Unable to get token : {e}')
+            error_msg = f'Unable to get token : {e}'
+            res.set_result(error_msg)
             res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
             return res.response, res.code
 
 
@@ -174,6 +190,7 @@ class UserPassword(Resource):
     @api.expect(payload)
     @api.response(200, sample_return)
     def put(self):
+        api.logger.info('Calling UserPassword put')
         # validate payload
         post_data = request.get_json()
         realm = post_data.get('realm', None)
@@ -182,15 +199,20 @@ class UserPassword(Resource):
         new_password = post_data.get('new_password', None)
 
         if realm is None or realm not in ConfigClass.KEYCLOAK.keys():
+            api.logger.info(f'Invalid realm: {realm}')
             return {'result': 'invalid realm'}, 400
         
         if username is None or old_password is None or new_password is None:
-            return {'result': 'missing username, old password or new password'}, 400
+            error_msg = 'missing username, old password or new password'
+            api.logger.info(error_msg)
+            return {'result': error_msg}, 400
 
         password_pattern = re.compile(ConfigClass.PASSWORD_REGEX)
         match = re.search(password_pattern, new_password)
         if not match:
-            return {'result': 'invalid new password'}, 400
+            error_msg = 'invalid new password'
+            api.logger.info(error_msg)
+            return {'result': error_msg}, 400
 
         # check old password
         client_id = ConfigClass.KEYCLOAK[realm][0]
@@ -203,27 +225,33 @@ class UserPassword(Resource):
                     client_secret)
             res = user_client.get_token(username, old_password)
         except Exception as e:
-            return {'result': 'incorrect realm, username or old password: {}'.format(e)}, 400
+            error_msg = 'incorrect realm, username or old password: {}'.format(e)
+            api.logger.error(error_msg)
+            return {'result': error_msg }, 400
 
         # create admin client
         try:
             admin_client = OperationsAdmin(realm)
         except Exception as e:
-            return {'result': 'invalid admin credentials: {}'.format(e)}, 500
+            error_msg = f'invalid admin credentials: {e}'
+            api.logger.error(error_msg)
+            return {'result': error_msg }, 500
 
         # get user id
         try:
             user_id = admin_client.get_user_id(username)
         except Exception as e:
-            return {'result': 'cannot get user id: {}'.format(e)}, 500
+            error_msg = f'cannot get user id: {e}'
+            api.logger.error(error_msg)
+            return {'result': error_msg }, 500
 
         # set user password
         try:
             res = admin_client.set_user_password(user_id, new_password, False)
         except Exception as e:
-            return {'result': 'cannot reset password: {}'.format(e)}, 500
+            error_msg = f'cannot reset password: {e}'
+            api.logger.error(error_msg)
+            return {'result': error_msg }, 500
 
+        api.logger.info(f'UserPassword Successful for {username} on realm {realm}')
         return {'result': 'success'}, 200
-
-        
-
