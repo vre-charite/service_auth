@@ -5,6 +5,8 @@ class EAPIResponseCode(Enum):
     internal_error = 500
     bad_request = 400
     not_found = 404
+    unauthorized = 401
+    forbidden = 403
 
 class APIResponse:
     _resp = {

@@ -26,3 +26,10 @@ from users.ops_admin import CreateUser, GetUserByUsername, GetUserByEmail
 api.add_resource(GetUserByUsername, '/v1/users/name')
 api.add_resource(CreateUser, '/v1/admin/users')
 api.add_resource(GetUserByEmail,'/v1/admin/users/email')
+
+# password reset endpoints
+from users.ops_reset import SendResetEmail, ChangePassword, CheckToken, SendUsername
+api.add_resource(SendResetEmail, '/v1/users/reset/send-email')
+api.add_resource(CheckToken, '/v1/users/reset/check-token')
+api.add_resource(ChangePassword, '/v1/users/reset/password')
+api.add_resource(SendUsername, '/v1/users/reset/send-username')

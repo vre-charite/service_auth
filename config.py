@@ -12,11 +12,27 @@ class ConfigClass(object):
     KEYCLOAK_GRANT_TYPE = "password"
     ADMIN_USERNAME = "admin"
     ADMIN_PASSWORD = "admin"
-    PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@#$!%*?&^])[A-Za-z\d@#$!%*?&^]{8,16}$"
+    PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\-_!%&/()=?*+#,.;])[A-Za-z\d\-_!%&/()=?*+#,.;]{11,30}$"
     NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
     api_modules = ["users"]
     JWT_AUTH_URL_RULE = None
     env = os.environ.get('env')
+    
+    # Email Notify Service
+    EMAIL_SERVICE = "http://notification.utility:5065/v1/email"
+    #EMAIL_SERVICE = "http://10.3.7.238:5065/v1/email"
+    EMAIL_DEFAULT_NOTIFIER = "notification@vre"
+    EMAIL_ADMIN_CONNECTION = "siteadmin.test@vre.com"
+    if env is None or env == 'charite':
+         # Config Email Service in charite
+        EMAIL_DEFAULT_NOTIFIER = "vre-support@charite.de"
+        EMAIL_ADMIN_CONNECTION = "vre-support@charite.de"
+        PASSWORD_RESET_URL_PREFIX = "http://10.32.42.226/vre/"
+    elif env == "staging":
+        PASSWORD_RESET_URL_PREFIX = "https://nx.indocresearch.org/vre/"
+    else:
+        PASSWORD_RESET_URL_PREFIX = "http://10.3.7.220/vre/"
+    PASSWORD_RESET_EXPIRE_HOURS = 1
 
     # BFF RDS
     RDS_HOST = "opsdb.utility"

@@ -58,7 +58,7 @@ class UserAuth(Resource):
                 api.logger.info('Username or Password missing on request')
                 return res.response, res.code
             if not realm or realm not in ConfigClass.KEYCLOAK.keys():
-                res.set_result('Invaild realm')
+                res.set_result('Invalid realm')
                 res.set_code(EAPIResponseCode.bad_request)
                 api.logger.info(f'Invalid realm: {realm}')
                 return res.response, res.code
@@ -72,6 +72,16 @@ class UserAuth(Resource):
                 realm, 
                 client_secret)
             token = user_client.get_token(username, password)
+            user_info = user_client.get_userinfo()
+
+            if user_info['preferred_username'] != username:
+                error_msg = 'User authentication failed '
+                print(error_msg)
+                res.set_result(error_msg)
+                res.set_code(EAPIResponseCode.unauthorized)
+                api.logger.error(error_msg)
+                return res.response, res.code
+
             res.set_result(token)
             res.set_code(EAPIResponseCode.success)
             api.logger.info(f'UserAuth Successful for {username} on realm {realm}')
@@ -79,16 +89,18 @@ class UserAuth(Resource):
         except exceptions.KeycloakAuthenticationError as err:
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
-            api.logger.error(str(error_msg))
-            return {"result": str(error_msg)}, err_code
+            print(err_code, error_msg)
+            api.logger.error(error_msg)
+            return {"result": error_msg}, err_code
         except exceptions.KeycloakGetError as err:
             print(err)
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
             api.logger.error(str(error_msg))
-            return {"result": str(error_msg)}, err_code
+            return {"result": error_msg}, err_code
         except Exception as e:
             error_msg = f'User authentication failed : {e}'
+            print(error_msg)
             res.set_result(error_msg)
             res.set_code(EAPIResponseCode.internal_error)
             api.logger.error(error_msg)
@@ -140,7 +152,7 @@ class UserRefresh(Resource):
                 api.logger.info(error_msg)
                 return res.response, res.code
             if not realm or realm not in ConfigClass.KEYCLOAK.keys():
-                res.set_result('Invaild realm')
+                res.set_result('Invalid realm')
                 res.set_code(EAPIResponseCode.bad_request)
                 api.logger.info(f'Invalid realm: {realm}')
                 return res.response, res.code
@@ -160,8 +172,8 @@ class UserRefresh(Resource):
         except exceptions.KeycloakGetError as err:
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
-            api.logger.error(str(error_msg))
-            return {"result": str(error_msg)}, err_code
+            api.logger.error(error_msg)
+            return {"result": error_msg}, err_code
         except Exception as e:
             error_msg = f'Unable to get token : {e}'
             res.set_result(error_msg)
@@ -212,7 +224,7 @@ class UserPassword(Resource):
         if not match:
             error_msg = 'invalid new password'
             api.logger.info(error_msg)
-            return {'result': error_msg}, 400
+            return {'result': error_msg}, 406
 
         # check old password
         client_id = ConfigClass.KEYCLOAK[realm][0]
@@ -255,3 +267,5 @@ class UserPassword(Resource):
 
         api.logger.info(f'UserPassword Successful for {username} on realm {realm}')
         return {'result': 'success'}, 200
+
+

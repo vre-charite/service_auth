@@ -14,7 +14,7 @@ executor = Executor()
 
 def create_app(extra_config_settings={}):
     # initialize app and config app
-    app = Flask(__name__)
+    app = Flask(__name__, template_folder="../templates")
     app.config.from_object(__name__+'.ConfigClass')
     CORS(
         app, 
