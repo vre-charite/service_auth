@@ -65,8 +65,17 @@ class SendResetEmail(Resource):
                 return res.response, res.code
 
             reset_token = uuid.uuid4().hex
-
             table = f"{ConfigClass.RDS_SCHEMA_DEFAULT}.user_password_reset"
+
+            # If there is another reset with the same details expiry it
+            update_query = f"UPDATE {table} SET expiry_timestamp = %(expiry_timestamp)s \
+                    WHERE email = %(email)s RETURNING *"
+            sql_params = {
+                "expiry_timestamp": datetime.now(),
+                "email": keycloak_data["email"],
+            }
+            sql_query(update_query, sql_params)
+
             query = f"INSERT INTO {table} (reset_token, email, expiry_timestamp) values \
                     (%(reset_token)s, %(email)s, %(expiry_timestamp)s) RETURNING *"
             expiry = datetime.now() + timedelta(hours=ConfigClass.PASSWORD_RESET_EXPIRE_HOURS)
@@ -150,6 +159,7 @@ class CheckToken(Resource):
             table = f"{ConfigClass.RDS_SCHEMA_DEFAULT}.user_password_reset"
             query = f"SELECT * FROM {table} where reset_token=%(reset_token)s ORDER BY expiry_timestamp asc"
             result = sql_query(query, {"reset_token": token}, fetch=True)
+
             if not result:
                 res.set_result('Token not valid')
                 res.set_code(EAPIResponseCode.bad_request)

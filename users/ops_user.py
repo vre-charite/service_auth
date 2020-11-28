@@ -6,6 +6,7 @@ from models.api_response import APIResponse, EAPIResponseCode
 from keycloak import exceptions
 from config import ConfigClass
 from users import api
+from datetime import datetime
 import requests
 import json
 import re
@@ -51,7 +52,7 @@ class UserAuth(Resource):
             username = post_data.get('username', None)
             password = post_data.get('password', None)  
             realm = post_data.get('realm', None) 
-            print(username);print(password);print(realm)
+
             if not username or not password :
                 res.set_result('Missing required information')
                 res.set_code(EAPIResponseCode.bad_request)
@@ -76,11 +77,25 @@ class UserAuth(Resource):
 
             if user_info['preferred_username'] != username:
                 error_msg = 'User authentication failed '
-                print(error_msg)
                 res.set_result(error_msg)
                 res.set_code(EAPIResponseCode.unauthorized)
                 api.logger.error(error_msg)
                 return res.response, res.code
+
+            # Get neo4j user id by username
+            try:
+                response = requests.post(
+                    ConfigClass.NEO4J_SERVICE + "nodes/User/query", 
+                    json={"name": username}
+                )
+                neo4j_user_id = json.loads(response.content)[0]["id"]
+                last_login = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
+                response = requests.put(
+                    ConfigClass.NEO4J_SERVICE + f"nodes/User/node/{neo4j_user_id}", 
+                    json={"last_login": str(last_login)}
+                )
+            except Exception as e:
+                api.logger.error("Error updating last_login " + str(e))
 
             res.set_result(token)
             res.set_code(EAPIResponseCode.success)
@@ -89,18 +104,15 @@ class UserAuth(Resource):
         except exceptions.KeycloakAuthenticationError as err:
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
-            print(err_code, error_msg)
             api.logger.error(error_msg)
             return {"result": error_msg}, err_code
         except exceptions.KeycloakGetError as err:
-            print(err)
             err_code = err.response_code
             error_msg = json.loads(err.response_body)
             api.logger.error(str(error_msg))
             return {"result": error_msg}, err_code
         except Exception as e:
             error_msg = f'User authentication failed : {e}'
-            print(error_msg)
             res.set_result(error_msg)
             res.set_code(EAPIResponseCode.internal_error)
             api.logger.error(error_msg)

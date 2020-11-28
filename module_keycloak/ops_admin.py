@@ -68,3 +68,8 @@ class OperationsAdmin:
     def set_user_password(self, userid, password, temporary):
         res = self.keycloak_admin.set_user_password(userid, password, temporary)
         return res
+
+    # Update user
+    def update_user(self, userid, payload):
+        res = self.keycloak_admin.update_user(user_id=userid, payload=payload)
+        return res

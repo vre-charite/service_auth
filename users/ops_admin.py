@@ -56,8 +56,6 @@ class CreateUser(Resource):
             email = post_data.get('email', None)
             firstname = post_data.get('firstname', None)
             lastname = post_data.get('lastname', None)
-            print("username");print(username);   print("password");print(password)                                         # for debug
-            print("email");print(email);         print("firstname");print(firstname);   print("lastname");print(lastname)  # for debug
             if not username or not password or not email or not firstname or not lastname:
                 res.set_result('Missing required information')
                 res.set_code(EAPIResponseCode.bad_request)
@@ -74,7 +72,6 @@ class CreateUser(Resource):
                 
             res.set_result('User created successfully')
             res.set_code(EAPIResponseCode.success)
-            print("created user is : "+user)
             api.logger.info(f'CreateUser Successful for {username}')
             return res.response, res.code
 
@@ -143,14 +140,12 @@ class GetUserByUsername(Resource):
             cursor.execute(query, { "invite_code": invite_code })
             result = cursor.fetchone();
             if not result:
-                print("Expired")
                 res.set_result('Invitation not valid')
                 res.set_code(EAPIResponseCode.bad_request)
                 return res.response, res.code
 
             expiry = result[2]
             if expiry <= datetime.now():
-                print("Expired")
                 res.set_result('Invitation expired')
                 res.set_code(EAPIResponseCode.bad_request)
                 return res.response, res.code
@@ -237,6 +232,175 @@ class GetUserByEmail(Resource):
                 res.set_code(EAPIResponseCode.not_found)
                 api.logger.info(f'GetUserByEmail not found for {email}')
                 return res.response, res.code
+            user_info = operations_admin.get_user_info(user.get("id"))
+            res.set_result(user_info)
+            res.set_code(EAPIResponseCode.success)
+            api.logger.info(f'GetUserByEmail Successful for {email}')
+            return res.response, res.code
+        except exceptions.KeycloakGetError as err:
+            err_code = err.response_code
+            error_msg = json.loads(err.response_body)
+            api.logger.error(error_msg)
+            return {"result": error_msg}, err_code
+        except Exception as e:
+            error_msg = f'query user by its email failed: {e}'
+            res.set_result(error_msg)
+            res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
+            return res.response, res.code
+
+
+class UserGroup(Resource):
+
+    ##############################################################swagger
+    payload = api.model(
+        "user_group", {
+            "realm": fields.String(readOnly=True, description='realm'),
+            "username": fields.String(readOnly=True, description='username'),
+            "groupname": fields.String(readOnly=True, description='groupname'),
+        }
+    )
+    sample_return = '''
+    {
+        "code": 200,
+        "error_msg": "",
+        "result": "success",
+        "page": 1,
+        "total": 1,
+        "num_of_pages": 1
+    }
+    '''
+    #############################################################
+    parser = api.parser()
+    @api.expect(payload)
+    @api.response(200, sample_return)
+    def post(self):
+        api.logger.info('Calling UserGroup post')
+        try:
+            res = APIResponse()
+            data = request.get_json()
+            realm = data.get("realm")
+            username = data.get("username")
+            groupname = data.get("groupname")
+            if not username or not groupname or not realm: 
+                res.set_result('Missing required information')
+                res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info('Missing username, groupname or realm')
+            operations_admin = OperationsAdmin(realm)
+            user_id = operations_admin.get_user_id(username)
+            group = operations_admin.keycloak_admin.get_group_by_path(f"/{groupname}")
+            if not group:
+                group_dict = {"name": groupname}
+                operations_admin.keycloak_admin.create_group(group_dict)
+                group = operations_admin.keycloak_admin.get_group_by_path(f"/{groupname}")
+            operations_admin.keycloak_admin.group_user_add(user_id, group["id"])
+            res.set_result('success')
+            res.set_code(EAPIResponseCode.success)
+            api.logger.info(f'UserGroup Successful for {username}')
+            return res.response, res.code
+
+        except Exception as e:
+            error_msg = f'UserGroup failed' + str(e)
+            res.set_result(error_msg)
+            res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
+            return res.response, res.code
+
+    @api.expect(payload)
+    @api.response(200, sample_return)
+    def delete(self):
+        api.logger.info('Calling UserGroup delete')
+        try:
+            res = APIResponse()
+            data = request.args
+            realm = data.get("realm")
+            username = data.get("username")
+            groupname = data.get("groupname")
+            if not username or not groupname or not realm: 
+                res.set_result('Missing required information')
+                res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info('Missing username, groupname or realm')
+            operations_admin = OperationsAdmin(realm)
+            user_id = operations_admin.get_user_id(username)
+            group = operations_admin.keycloak_admin.get_group_by_path(f"/{groupname}")
+            operations_admin.keycloak_admin.group_user_remove(user_id, group["id"])
+
+            res.set_result('success')
+            res.set_code(EAPIResponseCode.success)
+            api.logger.info(f'UserGroup Successful for {username}')
+            return res.response, res.code
+        except Exception as e:
+            error_msg = f'UserGroup delete failed' + str(e)
+            res.set_result(error_msg)
+            res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
+            return res.response, res.code
+
+
+class UserManagement(Resource):
+    ##############################################################swagger
+    payload = api.model(
+        "get_user_email", {
+            "realm": fields.String(readOnly=True, description='realm'),
+            "email": fields.String(readOnly=True, description='email'),
+            "status": fields.String(readOnly=True, description='status'),
+        }
+    )
+    sample_return = '''
+    {
+        "code": 200,
+        "error_msg": "",
+        "result": {
+            'id': '9229f648-cfad-4851-8a3c-4b46b9d94d08',
+            'createdTimestamp': 1598365933269,
+            'username': 'samantha',
+            'enabled': True,
+            'email': 'test@test.com',
+            ......
+        },
+        "page": 1,
+        "total": 1,
+        "num_of_pages": 1
+    }
+    '''
+    #############################################################
+    parser = api.parser()
+    @api.expect(payload)
+    @api.response(200, sample_return) 
+    def put(self):
+        api.logger.info('Calling GetUserByEmail get')
+        try:
+            res = APIResponse()
+
+            payload = request.get_json()
+
+            email = payload.get('email', None)
+            realm = payload.get('realm', None)
+            status = payload.get('status', None)
+
+            if not email or not realm or not status:
+                res.set_result('Missing required information')
+                res.set_code(EAPIResponseCode.bad_request)
+                api.logger.info('Email or realm missing on request')
+                return res.response, res.code
+            if not realm or realm not in ConfigClass.KEYCLOAK.keys():
+                res.set_result('Invalid realm')
+                res.set_code(EAPIResponseCode.bad_request)
+                return res.response, res.code
+
+            operations_admin = OperationsAdmin(realm)
+            user = operations_admin.get_user_by_email(email)
+            if not user:
+                res.set_result(None)
+                res.set_code(EAPIResponseCode.not_found)
+                api.logger.info(f'GetUserByEmail not found for {email}')
+                return res.response, res.code
+
+            payload = {"enabled": False}
+            if status == 'active':
+                payload = {"enabled": True}
+
+            operations_admin.update_user(user.get("id"), payload)
             user_info = operations_admin.get_user_info(user.get("id"))
             res.set_result(user_info)
             res.set_code(EAPIResponseCode.success)

@@ -24,7 +24,7 @@ class UserTests(unittest.TestCase):
     AUTH_DATA = {
         "realm": "vre",
         "username": "unittestuser",
-        "password": "Testing1!",
+        "password": "Testing123!",
     }
 
     def setUp(self):
@@ -44,7 +44,7 @@ class UserTests(unittest.TestCase):
 
         self.user = operations_admin.create_user(
             "unittestuser", 
-            "Testing1!", 
+            "Testing123!", 
             "unittesting@test.com", 
             "Test",
             "User", 
@@ -154,8 +154,8 @@ class UserTests(unittest.TestCase):
     def test_user_password(self):
         data = {
             "username": "unittestuser",
-            "old_password": "Testing1!",
-            "new_password": "Testing2!",
+            "old_password": "Testing123!",
+            "new_password": "Testing234!",
             "realm": "vre"
         }
         response = self.app.put('/v1/users/password', json=data)
@@ -165,7 +165,7 @@ class UserTests(unittest.TestCase):
 
         auth_data = {
             "username": "unittestuser",
-            "password": "Testing2!",
+            "password": "Testing234!",
             "realm": "vre"
         }
         response = self.app.post('/v1/users/auth', json=auth_data)
@@ -175,16 +175,16 @@ class UserTests(unittest.TestCase):
         self.assertTrue(response_json["result"]["access_token"])
 
         # Change the password back so it's consistant for other tests
-        data["old_password"] = "Testing2!"
-        data["new_password"] = "Testing1!"
+        data["old_password"] = "Testing234!"
+        data["new_password"] = "Testing123!"
         response = self.app.put('/v1/users/password', json=data)
         self.assertEqual(response.status_code, 200)
 
     def test_password_bad_realm(self):
         data = {
             "username": "unittestuser",
-            "old_password": "Testing1!",
-            "new_password": "Testing2!",
+            "old_password": "Testing123!",
+            "new_password": "Testing234!",
             "realm": "testing"
         }
         response = self.app.put('/v1/users/password', json=data)
@@ -195,7 +195,7 @@ class UserTests(unittest.TestCase):
     def test_password_missing(self):
         data = {
             "username": "unittestuser",
-            "new_password": "Testing2!",
+            "new_password": "Testing234!",
             "realm": "vre"
         }
         response = self.app.put('/v1/users/password', json=data)
@@ -206,12 +206,12 @@ class UserTests(unittest.TestCase):
     def test_password_insecure(self):
         data = {
             "username": "unittestuser",
-            "old_password": "Testing1!",
+            "old_password": "Testing123!",
             "new_password": "test",
             "realm": "vre"
         }
         response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 406)
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "invalid new password")
 
@@ -219,8 +219,8 @@ class UserTests(unittest.TestCase):
     def test_password_user_exception(self, mock_data):
         data = {
             "username": "unittestuser",
-            "old_password": "Testing1!",
-            "new_password": "Testing2!",
+            "old_password": "Testing123!",
+            "new_password": "Testing234!",
             "realm": "vre"
         }
         response = self.app.put('/v1/users/password', json=data)
@@ -232,8 +232,8 @@ class UserTests(unittest.TestCase):
     def test_password_admin_exception(self, mock_data):
         data = {
             "username": "unittestuser",
-            "old_password": "Testing1!",
-            "new_password": "Testing2!",
+            "old_password": "Testing123!",
+            "new_password": "Testing234!",
             "realm": "vre"
         }
         response = self.app.put('/v1/users/password', json=data)
@@ -245,8 +245,8 @@ class UserTests(unittest.TestCase):
     def test_password_get_user_exception(self, mock_data):
         data = {
             "username": "unittestuser",
-            "old_password": "Testing1!",
-            "new_password": "Testing2!",
+            "old_password": "Testing123!",
+            "new_password": "Testing234!",
             "realm": "vre"
         }
         response = self.app.put('/v1/users/password', json=data)
