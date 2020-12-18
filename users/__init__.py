@@ -15,10 +15,11 @@ api.logger.addHandler(SrvLoggerFactory("auth").get_logger())
 
 
 # user operations
-from users.ops_user import UserAuth, UserRefresh, UserPassword
+from users.ops_user import UserAuth, UserRefresh, UserPassword, UserLastLogin
 api.add_resource(UserAuth, '/v1/users/auth')
 api.add_resource(UserRefresh, '/v1/users/refresh')
 api.add_resource(UserPassword, '/v1/users/password')
+api.add_resource(UserLastLogin, '/v1/users/lastlogin')
 
 # admin-only operations 
 

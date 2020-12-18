@@ -14,7 +14,7 @@ import re
 
 class UserAuth(Resource):
     # user login 
-    ################################################################# Swagger
+    ################################################################ Swagger
     payload = api.model(
         "query_payload_basic", {
             "username": fields.String(readOnly=True, description='username'),
@@ -22,6 +22,7 @@ class UserAuth(Resource):
             "realm": fields.String(readOnly=True, description='realm'),
         }
     )
+
     sample_return = '''
     {
         "code": 200,
@@ -41,7 +42,7 @@ class UserAuth(Resource):
         "num_of_pages": 1
     }
     '''
-    #################################################################
+    ################################################################
     @api.expect(payload)
     @api.response(200, sample_return)
     def post(self):
@@ -279,5 +280,34 @@ class UserPassword(Resource):
 
         api.logger.info(f'UserPassword Successful for {username} on realm {realm}')
         return {'result': 'success'}, 200
+
+
+class UserLastLogin(Resource):
+    payload = api.model(
+        "query_payload_basic", {
+            "username": fields.String(readOnly=True, description='username'),
+        }
+    )
+    sample_return = {"result": "success"}
+
+    @api.expect(payload)
+    @api.response(200, sample_return)
+    def post(self):
+        username = request.get_json().get("username")
+
+        if not username:
+            return {"result": "Missing username"}, 400
+
+        response = requests.post(
+            ConfigClass.NEO4J_SERVICE + "nodes/User/query", 
+            json={"name": username}
+        )
+        neo4j_user_id = json.loads(response.content)[0]["id"]
+        last_login = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
+        response = requests.put(
+            ConfigClass.NEO4J_SERVICE + f"nodes/User/node/{neo4j_user_id}", 
+            json={"last_login": str(last_login)}
+        )
+        return {"result": "success"}, 200
 
 

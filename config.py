@@ -63,3 +63,4 @@ class ConfigClass(object):
         KEYCLOAK = {
             "vre": ["kong", "6f6b374b-1da9-4f77-b678-be48606e9905"]
         }
+

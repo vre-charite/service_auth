@@ -40,7 +40,7 @@ class AdminTests(unittest.TestCase):
 
         self.user = operations_admin.create_user(
             "unittestuser", 
-            "Testing1!", 
+            "Testing123!", 
             "unittesting@test.com", 
             "Test",
             "User", 
@@ -52,7 +52,7 @@ class AdminTests(unittest.TestCase):
     def test_create_user(self):
         data = {
             "username": "unittestuser2",
-            "password": "Testing1!",
+            "password": "Testing123!",
             "email": "unittesting2@test.com",
             "firstname": "Test",
             "lastname": "Test",
@@ -71,7 +71,7 @@ class AdminTests(unittest.TestCase):
     def test_create_user_invalid_realm(self):
         data = {
             "username": "unittestuser2",
-            "password": "Testing1!",
+            "password": "Testing123!",
             "email": "unittesting2@test.com",
             "firstname": "Test",
             "lastname": "Test",
@@ -87,7 +87,7 @@ class AdminTests(unittest.TestCase):
     def test_create_user_keycoak_except(self, mock_connect):
         data = {
             "username": "unittestuser2",
-            "password": "Testing1!",
+            "password": "Testing123!",
             "email": "unittesting2@test.com",
             "firstname": "Test",
             "lastname": "Test",
@@ -102,7 +102,7 @@ class AdminTests(unittest.TestCase):
     def test_create_user_keycoak_except(self, mock_connect):
         data = {
             "username": "unittestuser2",
-            "password": "Testing1!",
+            "password": "Testing123!",
             "email": "unittesting2@test.com",
             "firstname": "Test",
             "lastname": "Test",
