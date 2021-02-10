@@ -4,6 +4,7 @@ This repo documents the service of user management.
 sudo docker-compose up
 ```
 
+
 ### How to use the service
 * login 
 ```

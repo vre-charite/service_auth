@@ -9,7 +9,6 @@ import requests
 from flask_jwt import JWT,  JWTError
 import jwt as pyjwt
 
-
 def create_app(extra_config_settings={}):
     # initialize app and config app
     app = Flask(__name__, template_folder="../templates")
