@@ -88,22 +88,21 @@ class SendResetEmail(Resource):
             sql_query(query, sql_params)
             reset_link = ConfigClass.PASSWORD_RESET_URL_PREFIX + f"account-assistant/reset-password?token={reset_token}"
 
-            # Get email HTML from template
-            html_msg = render_template(
-                "reset_password.html",
-                username=keycloak_data["username"],
-                reset_link=reset_link,
-                admin_email=ConfigClass.EMAIL_ADMIN_CONNECTION,
-                hours=ConfigClass.PASSWORD_RESET_EXPIRE_HOURS
-            )
+            template_kwargs = {
+                "username": keycloak_data["username"],
+                "reset_link": reset_link,
+                "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+                "hours": ConfigClass.PASSWORD_RESET_EXPIRE_HOURS
+            }
             # Send reset email
             subject = "VRE password reset"
             email_sender = SrvEmail()
             email_result = email_sender.send(
                 subject,
-                html_msg,
                 [keycloak_data["email"]],
                 msg_type="html",
+                template="auth/reset_password.html",
+                template_kwargs=template_kwargs
             )
             email = mask_email(keycloak_data["email"])
 
@@ -318,21 +317,19 @@ class SendUsername(Resource):
                 api.logger.info(f'user not found with email {email}')
                 return res.response, res.code
 
-
-            # Get email HTML from template
-            html_msg = render_template(
-                "reset_username.html",
-                username=keycloak_data["username"],
-                admin_email=ConfigClass.EMAIL_ADMIN_CONNECTION
-            )
+            template_kwargs = {
+                "username": keycloak_data["username"],
+                "admin_email": ConfigClass.EMAIL_ADMIN_CONNECTION,
+            }
             # Send reset email
             subject = "VRE username"
             email_sender = SrvEmail()
             email_result = email_sender.send(
                 subject,
-                html_msg,
                 [keycloak_data["email"]],
                 msg_type="html",
+                template="auth/reset_username.html",
+                template_kwargs=template_kwargs
             )
             res.set_result("success")
             res.set_code(EAPIResponseCode.success)

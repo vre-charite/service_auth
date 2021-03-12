@@ -250,6 +250,52 @@ class GetUserByEmail(Resource):
             return res.response, res.code
 
 
+class UserGroupAll(Resource):
+
+    ##############################################################swagger
+    payload = api.model(
+        "user_group", {
+            "realm": fields.String(readOnly=True, description='realm'),
+            "username": fields.String(readOnly=True, description='username'),
+        }
+    )
+    sample_return = '''
+    {
+        "code": 200,
+        "error_msg": "",
+        "result": "success",
+        "page": 1,
+        "total": 1,
+        "num_of_pages": 1
+    }
+    '''
+    #############################################################
+    parser = api.parser()
+    @api.expect(payload)
+    @api.response(200, sample_return)
+    def post(self):
+        """
+        Adds the give user to all existing groups in keycloak
+        """
+        res = APIResponse()
+        data = request.get_json()
+        realm = data.get("realm")
+        username = data.get("username")
+
+        if not username or not realm: 
+            res.set_result('Missing required information')
+            res.set_code(EAPIResponseCode.bad_request)
+            return res.response, res.code
+        operations_admin = OperationsAdmin(realm)
+        user_id = operations_admin.get_user_id(username)
+        groups = operations_admin.keycloak_admin.get_groups()
+        for group in groups:
+            operations_admin.keycloak_admin.group_user_add(user_id, group["id"])
+        res.set_result('success')
+        res.set_code(EAPIResponseCode.success)
+        return res.response, res.code
+
+
 class UserGroup(Resource):
 
     ##############################################################swagger
@@ -298,7 +344,6 @@ class UserGroup(Resource):
             res.set_code(EAPIResponseCode.success)
             api.logger.info(f'UserGroup Successful for {username}')
             return res.response, res.code
-
         except Exception as e:
             error_msg = f'UserGroup failed' + str(e)
             res.set_result(error_msg)

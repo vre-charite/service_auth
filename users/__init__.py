@@ -23,12 +23,13 @@ api.add_resource(UserLastLogin, '/v1/users/lastlogin')
 
 # admin-only operations 
 
-from users.ops_admin import CreateUser, GetUserByUsername, GetUserByEmail, UserGroup, UserManagement
+from users.ops_admin import CreateUser, GetUserByUsername, GetUserByEmail, UserGroup, UserManagement, UserGroupAll
 api.add_resource(GetUserByUsername, '/v1/users/name')
 api.add_resource(CreateUser, '/v1/admin/users')
 api.add_resource(GetUserByEmail,'/v1/admin/users/email')
 api.add_resource(UserGroup, '/v1/admin/users/group')
 api.add_resource(UserManagement, '/v1/admin/users/management')
+api.add_resource(UserGroupAll, '/v1/admin/users/group/all')
 
 # password reset endpoints
 from users.ops_reset import SendResetEmail, ChangePassword, CheckToken, SendUsername
