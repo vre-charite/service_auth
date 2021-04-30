@@ -128,9 +128,6 @@ class UserManagementV1(Resource):
                     return decoded
                 linked_projects = [decode_linked_projects(
                     record) for record in respon_linked_projects.json()]
-            # update user status
-            user_data['status'] = user_status
-            neo4j_client.update_user(user_data['id'], user_data)
 
             # update keyclock, ldap project roles
             specified_project_code = operation_payload.get("project_code")
@@ -149,11 +146,6 @@ class UserManagementV1(Resource):
                         if project["relation_status"] == "active":
                             on_project_disable(
                                 user_data['email'], project, kc_cli, access_token)
-
-                # update neo4j relations
-                for project in linked_projects:
-                    neo4j_client.update_relation(user_data['id'], project['neo4j_id'],
-                                                 project['relation_name'], {'status': user_relationship_status})
             except Exception as e:
                 return {"error_message": " relation update error: " + str(e), "project": project}, 500
             # entra operations
@@ -165,9 +157,18 @@ class UserManagementV1(Resource):
                     enable_from_vre_user_group(
                         user_data['email'], kc_cli, access_token)
             except Exception as e:
-                return {"error_message": "remove from vre_users group error: " + str(e)}, 500
+                return {"error_message": "remove/enable from vre-users group error: " + str(e)}, 500
             # sync keyclock
             kc_cli.sync_user_trigger()
+
+            # update user status in neo4j
+            user_data['status'] = user_status
+            neo4j_client.update_user(user_data['id'], user_data)
+
+            # update neo4j relations
+            for project in linked_projects:
+                neo4j_client.update_relation(user_data['id'], project['neo4j_id'],
+                    project['relation_name'], {'status': user_relationship_status})
 
             return {'result': {
                 'user': user_data,
