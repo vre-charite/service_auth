@@ -65,11 +65,23 @@ class LdapClient():
         _logger.info("number of users found: " + str(len(users)))
         return users
 
+    def get_user_in_ldapsever_by_email(self, email):
+        '''
+        Return ldap user dn list
+        '''
+        users = self.conn.search_s(
+            "ou={},dc={},dc={}".format(
+                ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
+            ldap.SCOPE_SUBTREE,
+            '(&(objectClass=user)(mail={}))'.format(email)
+        )
+        return users
+
     def get_user_by_email(self, email):
         '''
         return tuple(user_dn, entry)
         '''
-        users_all = self.get_all_users()
+        users_all = self.get_user_in_ldapsever_by_email(email)
         user_found = None
         for user_dn, entry in users_all:
             if 'mail' in entry:
