@@ -70,8 +70,8 @@ class LdapClient():
         Return ldap user dn list
         '''
         users = self.conn.search_s(
-            "ou={},dc={},dc={}".format(
-                ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
+            "dc={},dc={}".format(
+                ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
             ldap.SCOPE_SUBTREE,
             '(&(objectClass=user)(mail={}))'.format(email)
         )
