@@ -16,6 +16,7 @@ class LdapClient():
         '''
         need build connection before using ldap client
         '''
+        ldap.set_option(ldap.OPT_REFERRALS, ldap.OPT_OFF)
         self.conn = ldap.initialize(ConfigClass.LDAP_URL)
         self.dn = "cn=vre-{},ou=Gruppen,ou={},dc={},dc={}".format(
             dn_code, ConfigClass.LDAP_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2)
