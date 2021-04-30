@@ -311,3 +311,62 @@ class UserLastLogin(Resource):
         return {"result": "success"}, 200
 
 
+class UserStatus(Resource):
+    def get(self):
+        email = request.args.get("email")
+        if not email:
+            return {"result": "Missing email"}, 400
+        response = requests.post(
+            ConfigClass.NEO4J_SERVICE + "nodes/User/query", 
+            json={"email": email}
+        )
+        if response.status_code != 200:
+            return response
+        if not response.json():
+            return {"result": "User not found"}, 404
+        user_node = response.json()[0]
+        result = {
+            "email": email,
+            "status": user_node["status"],
+        }
+        return result, 200
+
+class UserProjectRole(Resource):
+    def post(self):
+        post_data = request.get_json()
+        print(post_data)
+        realm = post_data.get("realm", None)
+        email = post_data.get("email", None)
+        project_role = post_data.get("project_role", None)
+        if not realm or not email or not project_role:
+            return {"error_message": "email/realm required"}, 400
+        # create admin client
+        try:
+            admin_client = OperationsAdmin(realm)
+        except Exception as e:
+            error_msg = f'invalid admin credentials: {e}'
+            api.logger.error(error_msg)
+            return {'result': error_msg }, 500
+        user = admin_client.get_user_by_email(email)
+        assign_result = admin_client.assign_user_role(user['id'], project_role)
+        return assign_result, 200
+
+    def delete(self):
+        post_data = request.get_json()
+        realm = post_data.get("realm", None)
+        email = post_data.get("email", None)
+        project_role = post_data.get("project_role", None)
+        if not realm or not email or not project_role:
+            return {"error_message": "email/realm required"}, 400
+        # create admin client
+        try:
+            admin_client = OperationsAdmin(realm)
+        except Exception as e:
+            error_msg = f'invalid admin credentials: {e}'
+            api.logger.error(error_msg)
+            return {'result': error_msg }, 500
+        user = admin_client.get_user_by_email(email)
+        response = admin_client.delete_role_of_user(user['id'], project_role)
+        if not response.status_code  in [200, 204]:
+            return response.json(), response.status_code
+        return {"result": 'success'}, 200

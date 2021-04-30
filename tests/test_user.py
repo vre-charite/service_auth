@@ -254,6 +254,29 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], 'cannot get user id: ')
 
+    def test_user_status(self):
+        data = {
+            "email": "jiayu.zhang015+10@gmail.com",
+        }
+        response = self.app.get('/v1/user/status', query_string=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["email"], "jiayu.zhang015+10@gmail.com")
+        self.assertTrue(response.get_json()["status"] in ["active", "disabled", "hibernate"])
+
+    def test_user_status_missing_email(self):
+        data = {
+        }
+        response = self.app.get('/v1/user/status', query_string=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["result"], "Missing email")
+
+    def test_user_status_bad_email(self):
+        data = {
+            "email": "afakeemailthatcertainlydoesnotexist@fake.ca",
+        }
+        response = self.app.get('/v1/user/status', query_string=data)
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json()["result"], "User not found")
 
 
 if __name__ == "__main__":

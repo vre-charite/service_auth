@@ -462,3 +462,85 @@ class UserManagement(Resource):
             res.set_code(EAPIResponseCode.internal_error)
             api.logger.error(error_msg)
             return res.response, res.code
+
+
+class SyncGroupTrigger(Resource):
+    def post(self):
+        api.logger.info('Calling Group Sync API')
+
+        try:
+            res = APIResponse()
+
+            payload = request.get_json()
+            realm = payload.get('realm', None)
+
+            if not realm or realm not in ConfigClass.KEYCLOAK.keys():
+                res.set_result('Invalid realm')
+                res.set_code(EAPIResponseCode.bad_request)
+                return res.response, res.code
+
+            operations_admin = OperationsAdmin(realm)
+
+            keycloak_res = operations_admin.sync_user_trigger()
+
+            if (keycloak_res.status_code != 200):
+                res.set_result(keycloak_res.text)
+                res.set_code(EAPIResponseCode.internal_error)
+                return res.response, res.code
+
+
+            res.set_result(keycloak_res.text)
+            res.set_code(EAPIResponseCode.success)
+            return res.response, res.code
+
+
+        except Exception as e:
+            error_msg = f'sync group to keycloak failed: {e}'
+            res.set_result(error_msg)
+            res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
+            return res.response, res.code
+
+
+class RealmRoles(Resource):
+    def post(self):
+        api.logger.info('Create Project Realm Roles API')
+
+        try:
+            res = APIResponse()
+
+            payload = request.get_json()
+            realm = payload.get('realm', None)
+            project_roles = payload.get('project_roles', None)
+            project_code = payload.get('project_code', None)
+
+            if not realm or realm not in ConfigClass.KEYCLOAK.keys():
+                res.set_result('Invalid realm')
+                res.set_code(EAPIResponseCode.bad_request)
+                return res.response, res.code
+
+            if not project_roles or not project_code:
+                res.set_result('Need project roles and project code')
+                res.set_code(EAPIResponseCode.bad_request)
+                return res.response, res.code
+
+            operations_admin = OperationsAdmin(realm)
+
+            keycloak_res = operations_admin.create_project_realm_roles(project_roles, project_code)
+
+            if keycloak_res != 'created':
+                res.set_result(keycloak_res.text)
+                res.set_code(EAPIResponseCode.internal_error)
+                return res.response, res.code
+
+            res.set_result(keycloak_res)
+            res.set_code(EAPIResponseCode.success)
+            return res.response, res.code
+
+
+        except Exception as e:
+            error_msg = f'create realm roles in keycloak failed: {e}'
+            res.set_result(error_msg)
+            res.set_code(EAPIResponseCode.internal_error)
+            api.logger.error(error_msg)
+            return res.response, res.code
