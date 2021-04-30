@@ -84,9 +84,10 @@ class ConfigClass(object):
         LDAP_URL = "ldap://charite.de:389/"
         LDAP_ADMIN_DN = "svc-vre-ad@CHARITE"
         LDAP_ADMIN_SECRET = "~*<whA\\5PCnk%X<k"
-        LDAP_OU = "VRE,OU=Charite-Zentrale-Anwendungen"
+        LDAP_OU = "VRE"
         LDAP_DC1 = "charite"
         LDAP_DC2 = "de"
+        LDAP_USER_OU = "Charite-Zentrale-Anwendungen"
         LDAP_USER_GROUP = "vre-users"
     else:
         KEYCLOAK_VRE_SECRET = "6f6b374b-1da9-4f77-b678-be48606e9905"
