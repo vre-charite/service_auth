@@ -54,10 +54,10 @@ class LdapClient():
         Return ldap user dn list
         '''
         _logger.info("remove user from group dn: " + self.dn)
-        _logger.info("search users dn: " + "ou={},dc={},dc={}".format(ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2))
+        _logger.info("search users dn: " + "dc={},dc={}".format(ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2))
         users = self.conn.search_s(
-            "ou={},dc={},dc={}".format(
-                ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
+            "dc={},dc={}".format(
+                ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
             ldap.SCOPE_SUBTREE,
             '(objectClass=user)'
         )
@@ -83,8 +83,8 @@ class LdapClient():
         Return ldap user dn by given cn
         '''
         users = self.conn.search_s(
-            "ou={},dc={},dc={}".format(
-                ConfigClass.LDAP_USER_OU, ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
+            "dc={},dc={}".format(
+                ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
             ldap.SCOPE_SUBTREE,
             u"(cn={})".format(username)
         )
