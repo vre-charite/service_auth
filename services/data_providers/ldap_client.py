@@ -89,6 +89,8 @@ class LdapClient():
                 if decoded_email == email:
                     user_found = (user_dn, entry)
         _logger.info("found user by email: " + str(user_found))
+        if not user_found:
+            raise Exception('get_user_by_email error: User not found on AD: ' + email)
         return user_found
 
     def get_user_by_username(self, username):
