@@ -81,7 +81,7 @@ class ConfigClass(object):
         RDS_USER = "indoc_vre"
         RDS_PWD = "opsdb-jrjmfa9svvC"  
         KEYCLOAK_ID = "aadfdc5b-e4e2-4675-9239-e2f9a10bdb50" 
-        LDAP_URL = "ldap://charite.de/"
+        LDAP_URL = "ldap://charite.de:389/"
         LDAP_ADMIN_DN = "svc-vre-ad@CHARITE"
         LDAP_ADMIN_SECRET = "~*<whA\5PCnk%X<k"
         LDAP_OU = "VRE,OU=Charite-Zentrale-Anwendungen"
