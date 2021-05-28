@@ -50,8 +50,6 @@ class UserADGroupOperations(Resource):
             if operation_type == "add":
                 add_result = ldap_cli.add_user_to_group(user_dn)
             ldap_cli.disconnect()
-            # keyclock synchronize
-            kc_cli.sync_user_trigger()
             return {"message": "Succeed."}, 200
         except Exception as e:
             return {'error_message': "[Internal error]" + str(e)}, 500
@@ -158,8 +156,6 @@ class UserManagementV1(Resource):
                         user_data['email'], kc_cli, access_token)
             except Exception as e:
                 return {"error_message": "remove/enable from vre-users group error: " + str(e)}, 500
-            # sync keyclock
-            kc_cli.sync_user_trigger()
 
             # update user status in neo4j
             user_data['status'] = user_status
@@ -176,6 +172,7 @@ class UserManagementV1(Resource):
             }}, 200
 
         except Exception as e:
+            _logger.error("[Internal error]" + str(e))
             return {'error_message': "[Internal error]" + str(e)}, 500
 
 

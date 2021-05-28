@@ -25,7 +25,7 @@ api.add_resource(UserProjectRole, '/v1/user/project-role')
 
 # admin-only operations 
 
-from users.ops_admin import CreateUser, GetUserByUsername, GetUserByEmail, UserGroup, UserManagement, UserGroupAll, SyncGroupTrigger, RealmRoles
+from users.ops_admin import CreateUser, GetUserByUsername, GetUserByEmail, UserGroup, UserManagement, UserGroupAll, SyncGroupTrigger, RealmRoles, UserProjectRoleAll
 api.add_resource(GetUserByUsername, '/v1/users/name')
 api.add_resource(CreateUser, '/v1/admin/users')
 api.add_resource(GetUserByEmail,'/v1/admin/users/email')
@@ -34,6 +34,7 @@ api.add_resource(UserManagement, '/v1/admin/users/management')
 api.add_resource(SyncGroupTrigger, '/v1/admin/users/group/sync')
 api.add_resource(RealmRoles, '/v1/admin/users/realm-roles')
 api.add_resource(UserGroupAll, '/v1/admin/users/group/all')
+api.add_resource(UserProjectRoleAll, '/v1/admin/users/project-role/all')
 
 from users.user_account_management import UserManagementV1, UserADGroupOperations
 api.add_resource(UserManagementV1, '/v1/user/account')

@@ -544,3 +544,52 @@ class RealmRoles(Resource):
             res.set_code(EAPIResponseCode.internal_error)
             api.logger.error(error_msg)
             return res.response, res.code
+
+
+class UserProjectRoleAll(Resource):
+
+    ##############################################################swagger
+    payload = api.model(
+        "user_group", {
+            "realm": fields.String(readOnly=True, description='realm'),
+            "username": fields.String(readOnly=True, description='username'),
+        }
+    )
+    sample_return = '''
+    {
+        "code": 200,
+        "error_msg": "",
+        "result": "success",
+        "page": 1,
+        "total": 1,
+        "num_of_pages": 1
+    }
+    '''
+    #############################################################
+    parser = api.parser()
+    @api.expect(payload)
+    @api.response(200, sample_return)
+    def post(self):
+        """
+        Adds the give user all admin project roles
+        """
+        res = APIResponse()
+        data = request.get_json()
+        realm = data.get("realm")
+        username = data.get("username")
+        if not username or not realm:
+            res.set_result('Missing required information')
+            res.set_code(EAPIResponseCode.bad_request)
+            return res.response, res.code
+        operations_admin = OperationsAdmin(realm)
+        user_id = operations_admin.get_user_id(username)
+        realm_roles = operations_admin.keycloak_admin.get_realm_roles()
+        client_id = ConfigClass.KEYCLOAK['vre'][0]
+        assign_roles = []
+        for role in realm_roles:
+            if role["name"].endswith("-admin"):
+                assign_roles.append(role)
+        operations_admin.keycloak_admin.assign_realm_roles(client_id=client_id, user_id=user_id, roles=assign_roles)
+        res.set_result('success')
+        res.set_code(EAPIResponseCode.success)
+        return res.response, res.code

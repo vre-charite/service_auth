@@ -31,7 +31,7 @@ class Neo4jClient(object):
     @catch_internal
     def node_create(self, label, data):
         response = requests.post(
-            ConfigClass.NEO4J_SERVICE_HOST + f"/v1/neo4j/nodes/{label}", json=data)
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}", json=data)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -39,7 +39,7 @@ class Neo4jClient(object):
     @catch_internal
     def node_query(self, label, data):
         response = requests.post(
-            ConfigClass.NEO4J_SERVICE_HOST + f"/v1/neo4j/nodes/{label}/query", json=data)
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}/query", json=data)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -48,7 +48,7 @@ class Neo4jClient(object):
     def get_relation(self, start_id, end_id):
         relation_query = {"start_id": start_id, "end_id": end_id}
         response = requests.get(
-            ConfigClass.NEO4J_SERVICE_HOST + f"/v1/neo4j/relations", params=relation_query)
+            ConfigClass.NEO4J_SERVICE + f"relations", params=relation_query)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -59,7 +59,7 @@ class Neo4jClient(object):
         if properties:
             payload['properties'] = properties
         response = requests.post(
-            ConfigClass.NEO4J_SERVICE_HOST + f"/v1/neo4j/relations/{label}", json=payload)
+            ConfigClass.NEO4J_SERVICE + f"relations/{label}", json=payload)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -67,7 +67,7 @@ class Neo4jClient(object):
     @catch_internal
     def update_node(self, label, node_id, data):
         response = requests.put(
-            ConfigClass.NEO4J_SERVICE_HOST + f"/v1/neo4j/nodes/{label}/node/{node_id}", json=data)
+            ConfigClass.NEO4J_SERVICE + f"nodes/{label}/node/{node_id}", json=data)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -78,7 +78,7 @@ class Neo4jClient(object):
         if properties:
             payload['properties'] = properties
         response = requests.put(
-            ConfigClass.NEO4J_SERVICE_HOST + f"/v1/neo4j/relations/{label}", json=payload)
+            ConfigClass.NEO4J_SERVICE + f"relations/{label}", json=payload)
         result = self.result.copy()
         result["result"] = response.json()
         return result
@@ -164,7 +164,7 @@ class Neo4jClient(object):
         return response
 
     def get_user_linked_projects(self, user_id):
-        url = ConfigClass.NEO4J_SERVICE_HOST + "/v1/neo4j/relations/query"
+        url = ConfigClass.NEO4J_SERVICE + "relations/query"
         payload = {
             "start_label": "User",
             "end_label": "Dataset",
