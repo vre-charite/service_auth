@@ -9,16 +9,16 @@ class EAPIResponseCode(Enum):
     forbidden = 403
 
 class APIResponse:
-    _resp = {
-        'code': EAPIResponseCode.success.value, ## by default success
-        'error_msg': '', ## empty when success
-        'result': '',
-        'page': 1, ## optional
-        'total': 1, ## optional
-        'num_of_pages': 1, ## optional
-    }
     def __init__(self):
-        pass
+        self._resp = {
+            'code': EAPIResponseCode.success.value, ## by default success
+            'error_msg': '', ## empty when success
+            'result': '',
+            'page': 1, ## optional
+            'total': 1, ## optional
+            'num_of_pages': 1, ## optional
+        }
+
     @property
     def response(self):
         return self._resp
@@ -52,3 +52,6 @@ class APIResponse:
         self._resp['total'] = total_rows
     def set_num_of_pages(self, num_of_pages: int):
         self._resp['num_of_pages'] = num_of_pages
+    def to_dict(self):
+        return self._resp
+

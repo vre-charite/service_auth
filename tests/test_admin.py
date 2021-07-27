@@ -68,21 +68,6 @@ class AdminTests(unittest.TestCase):
         user_id = operations_admin.get_user_id("unittestuser2")
         operations_admin.delete_user(user_id)
 
-    def test_create_user_invalid_realm(self):
-        data = {
-            "username": "unittestuser2",
-            "password": "Testing123!",
-            "email": "unittesting2@test.com",
-            "firstname": "Test",
-            "lastname": "Test",
-            "realm": "invalid"
-        }
-        response = self.app.post('/v1/admin/users', json=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["error_msg"], "")
-        self.assertEqual(response_json["result"], "Invalid realm")
-
     @mock.patch.object(OperationsAdmin, '__init__', side_effect=keycloak.exceptions.KeycloakAuthenticationError(**EXCEPTION_DATA))
     def test_create_user_keycoak_except(self, mock_connect):
         data = {
@@ -173,30 +158,11 @@ class AdminTests(unittest.TestCase):
         mock_cur.fetchone.return_value = query_result
 
         data = {
-            "username": "unittestuser",
-            "invite_code": "testing",
         }
         response = self.app.get('/v1/users/name', query_string=data)
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "Missing required information")
-
-    @mock.patch("psycopg2.connect")
-    def test_get_username_invalid_realm(self, mock_connect):
-        query_result = ["testing", "data", datetime.now() + timedelta(1), datetime.now() + timedelta(1)]
-        mock_con = mock_connect.return_value
-        mock_cur = mock_con.cursor.return_value
-        mock_cur.fetchone.return_value = query_result
-
-        data = {
-            "username": "unittestuser",
-            "invite_code": "testing",
-            "realm": "test"
-        }
-        response = self.app.get('/v1/users/name', query_string=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "Invalid realm")
 
     @mock.patch.object(OperationsAdmin, '__init__', side_effect=keycloak.exceptions.KeycloakAuthenticationError(**EXCEPTION_DATA))
     @mock.patch("psycopg2.connect")
@@ -247,23 +213,10 @@ class AdminTests(unittest.TestCase):
         self.assertEqual(response_json["result"]["username"], "unittestuser")
 
     def test_get_email_missing_info(self):
-        data = {
-            "email": "unittesting@test.com",
-        }
-        response = self.app.get('/v1/admin/users/email', query_string=data)
+        response = self.app.get('/v1/admin/users/email')
         response_json = json.loads(response.data)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response_json["result"], "Missing required information")
-
-    def test_get_email_invalid_realm(self):
-        data = {
-            "email": "unittesting@test.com",
-            "realm": "test",
-        }
-        response = self.app.get('/v1/admin/users/email', query_string=data)
-        response_json = json.loads(response.data)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response_json["result"], "Invalid realm")
 
     def test_get_email_no_user(self):
         data = {

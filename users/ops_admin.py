@@ -43,7 +43,7 @@ class CreateUser(Resource):
         try:
             res = APIResponse()
             post_data = request.get_json()
-            realm = post_data.get('realm', None)
+            realm = ConfigClass.KEYCLOAK_REALM
             if not realm or not realm in ConfigClass.KEYCLOAK.keys():
                 res.set_result('Invalid realm')
                 res.set_code(EAPIResponseCode.bad_request)
@@ -122,7 +122,7 @@ class GetUserByUsername(Resource):
         api.logger.info('Calling GetUserByUsername get')
         try:
             res = APIResponse()
-            realm = request.args.get('realm', None)
+            realm = ConfigClass.KEYCLOAK_REALM
             username = request.args.get('username', None)
             invite_code = request.args.get('invite_code', None)
 
@@ -213,7 +213,7 @@ class GetUserByEmail(Resource):
             res = APIResponse()
 
             email = request.args.get('email', None)
-            realm = request.args.get('realm', None)
+            realm = ConfigClass.KEYCLOAK_REALM
 
             if not email or not realm:
                 res.set_result('Missing required information')
@@ -279,7 +279,7 @@ class UserGroupAll(Resource):
         """
         res = APIResponse()
         data = request.get_json()
-        realm = data.get("realm")
+        realm = ConfigClass.KEYCLOAK_REALM
         username = data.get("username")
 
         if not username or not realm: 
@@ -325,7 +325,7 @@ class UserGroup(Resource):
         try:
             res = APIResponse()
             data = request.get_json()
-            realm = data.get("realm")
+            realm = ConfigClass.KEYCLOAK_REALM
             username = data.get("username")
             groupname = data.get("groupname")
             if not username or not groupname or not realm: 
@@ -358,7 +358,7 @@ class UserGroup(Resource):
         try:
             res = APIResponse()
             data = request.args
-            realm = data.get("realm")
+            realm = ConfigClass.KEYCLOAK_REALM
             username = data.get("username")
             groupname = data.get("groupname")
             if not username or not groupname or not realm: 
@@ -381,89 +381,6 @@ class UserGroup(Resource):
             api.logger.error(error_msg)
             return res.response, res.code
 
-
-class UserManagement(Resource):
-    ##############################################################swagger
-    payload = api.model(
-        "get_user_email", {
-            "realm": fields.String(readOnly=True, description='realm'),
-            "email": fields.String(readOnly=True, description='email'),
-            "status": fields.String(readOnly=True, description='status'),
-        }
-    )
-    sample_return = '''
-    {
-        "code": 200,
-        "error_msg": "",
-        "result": {
-            'id': '9229f648-cfad-4851-8a3c-4b46b9d94d08',
-            'createdTimestamp': 1598365933269,
-            'username': 'samantha',
-            'enabled': True,
-            'email': 'test@test.com',
-            ......
-        },
-        "page": 1,
-        "total": 1,
-        "num_of_pages": 1
-    }
-    '''
-    #############################################################
-    parser = api.parser()
-    @api.expect(payload)
-    @api.response(200, sample_return) 
-    def put(self):
-        api.logger.info('Calling GetUserByEmail get')
-        try:
-            res = APIResponse()
-
-            payload = request.get_json()
-
-            email = payload.get('email', None)
-            realm = payload.get('realm', None)
-            status = payload.get('status', None)
-
-            if not email or not realm or not status:
-                res.set_result('Missing required information')
-                res.set_code(EAPIResponseCode.bad_request)
-                api.logger.info('Email or realm missing on request')
-                return res.response, res.code
-            if not realm or realm not in ConfigClass.KEYCLOAK.keys():
-                res.set_result('Invalid realm')
-                res.set_code(EAPIResponseCode.bad_request)
-                return res.response, res.code
-
-            operations_admin = OperationsAdmin(realm)
-            user = operations_admin.get_user_by_email(email)
-            if not user:
-                res.set_result(None)
-                res.set_code(EAPIResponseCode.not_found)
-                api.logger.info(f'GetUserByEmail not found for {email}')
-                return res.response, res.code
-
-            payload = {"enabled": False}
-            if status == 'active':
-                payload = {"enabled": True}
-
-            operations_admin.update_user(user.get("id"), payload)
-            user_info = operations_admin.get_user_info(user.get("id"))
-            res.set_result(user_info)
-            res.set_code(EAPIResponseCode.success)
-            api.logger.info(f'GetUserByEmail Successful for {email}')
-            return res.response, res.code
-        except exceptions.KeycloakGetError as err:
-            err_code = err.response_code
-            error_msg = json.loads(err.response_body)
-            api.logger.error(error_msg)
-            return {"result": error_msg}, err_code
-        except Exception as e:
-            error_msg = f'query user by its email failed: {e}'
-            res.set_result(error_msg)
-            res.set_code(EAPIResponseCode.internal_error)
-            api.logger.error(error_msg)
-            return res.response, res.code
-
-
 class SyncGroupTrigger(Resource):
     def post(self):
         api.logger.info('Calling Group Sync API')
@@ -472,7 +389,7 @@ class SyncGroupTrigger(Resource):
             res = APIResponse()
 
             payload = request.get_json()
-            realm = payload.get('realm', None)
+            realm = ConfigClass.KEYCLOAK_REALM
 
             if not realm or realm not in ConfigClass.KEYCLOAK.keys():
                 res.set_result('Invalid realm')
@@ -510,7 +427,7 @@ class RealmRoles(Resource):
             res = APIResponse()
 
             payload = request.get_json()
-            realm = payload.get('realm', None)
+            realm = ConfigClass.KEYCLOAK_REALM
             project_roles = payload.get('project_roles', None)
             project_code = payload.get('project_code', None)
 
@@ -575,7 +492,7 @@ class UserProjectRoleAll(Resource):
         """
         res = APIResponse()
         data = request.get_json()
-        realm = data.get("realm")
+        realm = ConfigClass.KEYCLOAK_REALM
         username = data.get("username")
         if not username or not realm:
             res.set_result('Missing required information')

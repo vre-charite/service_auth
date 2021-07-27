@@ -52,7 +52,7 @@ class UserAuth(Resource):
             post_data = request.get_json()
             username = post_data.get('username', None)
             password = post_data.get('password', None)  
-            realm = post_data.get('realm', None) 
+            realm = ConfigClass.KEYCLOAK_REALM
 
             if not username or not password :
                 res.set_result('Missing required information')
@@ -155,9 +155,9 @@ class UserRefresh(Resource):
         api.logger.info('Calling UserRefresh post')
         try:
             res = APIResponse()
-            post_data = request.get_json()
+            post_data = request.get_json() or {}
             token = post_data.get('refreshtoken', None)
-            realm = post_data.get('realm', None) 
+            realm = ConfigClass.KEYCLOAK_REALM
             if not token:
                 error_msg = 'Missing refresh token'
                 res.set_result(error_msg)
@@ -193,94 +193,6 @@ class UserRefresh(Resource):
             res.set_code(EAPIResponseCode.internal_error)
             api.logger.error(error_msg)
             return res.response, res.code
-
-
-class UserPassword(Resource):
-    # user reset password
-    ################################################################# Swagger
-    payload = api.model(
-        "user_password_payload", {
-            "realm": fields.String(readOnly=True, description='realm'),
-            "username": fields.String(readOnly=True, description='username'),
-            "old_password": fields.String(readOnly=True, description='old password'),
-            "new_password": fields.String(readOnly=True, description='new password'),
-        }
-    )
-    sample_return = '''
-    {
-        "result": "success"
-    }
-    '''
-    #################################################################
-    @api.expect(payload)
-    @api.response(200, sample_return)
-    def put(self):
-        api.logger.info('Calling UserPassword put')
-        # validate payload
-        post_data = request.get_json()
-        realm = post_data.get('realm', None)
-        username = post_data.get('username', None)
-        old_password = post_data.get('old_password', None)
-        new_password = post_data.get('new_password', None)
-
-        if realm is None or realm not in ConfigClass.KEYCLOAK.keys():
-            api.logger.info(f'Invalid realm: {realm}')
-            return {'result': 'invalid realm'}, 400
-        
-        if username is None or old_password is None or new_password is None:
-            error_msg = 'missing username, old password or new password'
-            api.logger.info(error_msg)
-            return {'result': error_msg}, 400
-
-        password_pattern = re.compile(ConfigClass.PASSWORD_REGEX)
-        match = re.search(password_pattern, new_password)
-        if not match:
-            error_msg = 'invalid new password'
-            api.logger.info(error_msg)
-            return {'result': error_msg}, 406
-
-        # check old password
-        client_id = ConfigClass.KEYCLOAK[realm][0]
-        client_secret = ConfigClass.KEYCLOAK[realm][1]
-
-        try:
-            user_client = OperationsUser(
-                    client_id,
-                    realm, 
-                    client_secret)
-            res = user_client.get_token(username, old_password)
-        except Exception as e:
-            error_msg = 'incorrect realm, username or old password: {}'.format(e)
-            api.logger.error(error_msg)
-            return {'result': error_msg }, 400
-
-        # create admin client
-        try:
-            admin_client = OperationsAdmin(realm)
-        except Exception as e:
-            error_msg = f'invalid admin credentials: {e}'
-            api.logger.error(error_msg)
-            return {'result': error_msg }, 500
-
-        # get user id
-        try:
-            user_id = admin_client.get_user_id(username)
-        except Exception as e:
-            error_msg = f'cannot get user id: {e}'
-            api.logger.error(error_msg)
-            return {'result': error_msg }, 500
-
-        # set user password
-        try:
-            res = admin_client.set_user_password(user_id, new_password, False)
-        except Exception as e:
-            error_msg = f'cannot reset password: {e}'
-            api.logger.error(error_msg)
-            return {'result': error_msg }, 500
-
-        api.logger.info(f'UserPassword Successful for {username} on realm {realm}')
-        return {'result': 'success'}, 200
-
 
 class UserLastLogin(Resource):
     payload = api.model(
@@ -335,7 +247,7 @@ class UserProjectRole(Resource):
     def post(self):
         post_data = request.get_json()
         print(post_data)
-        realm = post_data.get("realm", None)
+        realm = ConfigClass.KEYCLOAK_REALM
         email = post_data.get("email", None)
         project_role = post_data.get("project_role", None)
         if not realm or not email or not project_role:
@@ -349,11 +261,11 @@ class UserProjectRole(Resource):
             return {'result': error_msg }, 500
         user = admin_client.get_user_by_email(email)
         assign_result = admin_client.assign_user_role(user['id'], project_role)
-        return assign_result, 200
+        return {"result": 'success'}, 200
 
     def delete(self):
         post_data = request.get_json()
-        realm = post_data.get("realm", None)
+        realm = ConfigClass.KEYCLOAK_REALM
         email = post_data.get("email", None)
         project_role = post_data.get("project_role", None)
         if not realm or not email or not project_role:

@@ -78,14 +78,6 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "Missing required information")
 
-    def test_auth_bad_realm(self):
-        data = self.AUTH_DATA.copy()
-        data["realm"] = "testing"
-        response = self.app.post('/v1/users/auth', json=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "Invalid realm")
-
     @mock.patch.object(OperationsUser, '__init__', side_effect=keycloak.exceptions.KeycloakAuthenticationError(**EXCEPTION_DATA))
     def test_auth_keycloakauth_exception(self, mock_data):
         response = self.app.post('/v1/users/auth', json=self.AUTH_DATA)
@@ -122,20 +114,8 @@ class UserTests(unittest.TestCase):
         self.assertEqual(response_json["error_msg"], "")
         self.assertTrue(response_json["result"]["refresh_token"])
 
-    def test_user_refresh_bad_realm(self):
-        refresh_data = {
-            "refreshtoken": "test"
-        }
-        response = self.app.post('/v1/users/refresh', json=refresh_data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "Invalid realm")
-
     def test_user_refresh_missing(self):
-        refresh_data = {
-            "realm": "vre",
-        }
-        response = self.app.post('/v1/users/refresh', json=refresh_data)
+        response = self.app.post('/v1/users/refresh')
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "Missing refresh token")
@@ -151,6 +131,7 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], {"error": "error"})
 
+    @unittest.skip("deprecated the APIs")
     def test_user_password(self):
         data = {
             "username": "unittestuser",
@@ -179,19 +160,8 @@ class UserTests(unittest.TestCase):
         data["new_password"] = "Testing123!"
         response = self.app.put('/v1/users/password', json=data)
         self.assertEqual(response.status_code, 200)
-
-    def test_password_bad_realm(self):
-        data = {
-            "username": "unittestuser",
-            "old_password": "Testing123!",
-            "new_password": "Testing234!",
-            "realm": "testing"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "invalid realm")
-
+    
+    @unittest.skip("deprecated the APIs")
     def test_password_missing(self):
         data = {
             "username": "unittestuser",
@@ -203,6 +173,7 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "missing username, old password or new password")
 
+    @unittest.skip("deprecated the APIs")
     def test_password_insecure(self):
         data = {
             "username": "unittestuser",
@@ -215,7 +186,8 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "invalid new password")
 
-    @mock.patch.object(OperationsUser, '__init__', side_effect=Exception())
+    @unittest.skip("deprecated the APIs")
+    #@mock.patch.object(OperationsUser, '__init__', side_effect=Exception())
     def test_password_user_exception(self, mock_data):
         data = {
             "username": "unittestuser",
@@ -228,7 +200,8 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], "incorrect realm, username or old password: ")
 
-    @mock.patch.object(OperationsAdmin, '__init__', side_effect=Exception())
+    @unittest.skip("deprecated the APIs")
+    #@mock.patch.object(OperationsAdmin, '__init__', side_effect=Exception())
     def test_password_admin_exception(self, mock_data):
         data = {
             "username": "unittestuser",
@@ -241,7 +214,8 @@ class UserTests(unittest.TestCase):
         response_json = json.loads(response.data)
         self.assertEqual(response_json["result"], 'invalid admin credentials: ')
 
-    @mock.patch.object(OperationsAdmin, 'get_user_id', side_effect=Exception())
+    @unittest.skip("deprecated the APIs")
+    #@mock.patch.object(OperationsAdmin, 'get_user_id', side_effect=Exception())
     def test_password_get_user_exception(self, mock_data):
         data = {
             "username": "unittestuser",

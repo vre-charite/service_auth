@@ -17,7 +17,7 @@ EXCEPTION_DATA = {
     "response_code": 500
 }
 
-
+@unittest.skip("deprecated the APIs")
 class ResetTests(unittest.TestCase):
 
     def setUp(self):

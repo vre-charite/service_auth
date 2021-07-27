@@ -32,3 +32,5 @@ python-keycloak==0.21.0
 flask-restx==0.2.0
 python-json-logger==0.1.11
 python-ldap==3.3.1
+casbin==1.1.1
+casbin_sqlalchemy_adapter==0.3.1

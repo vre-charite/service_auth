@@ -8,6 +8,9 @@ import requests
 
 from flask_jwt import JWT,  JWTError
 import jwt as pyjwt
+from sqlalchemy import create_engine
+
+engine = create_engine(ConfigClass.OPS_DB_URI, max_overflow=10, pool_recycle=1800, pool_size=10)
 
 def create_app(extra_config_settings={}):
     # initialize app and config app
@@ -19,6 +22,7 @@ def create_app(extra_config_settings={}):
         allow_headers=["Content-Type", "Authorization","Access-Control-Allow-Credentials"],
         supports_credentials=True, 
         intercept_exceptions=False)
+
 
     # dynamic add the dataset module by the config we set
     for apis in ConfigClass.api_modules:

@@ -56,6 +56,7 @@ class ConfigClass(object):
     if env == "charite":
         RDS_USER = "indoc_vre"
         RDS_PWD = os.environ.get('RDS_PWD')
+    OPS_DB_URI = f"postgres://{RDS_USER}:{RDS_PWD}@{RDS_HOST}/{RDS_DBNAME}"
 
     # Keycloak config
     KEYCLOAK_VRE_CLIENT_ID = "kong"
@@ -66,6 +67,7 @@ class ConfigClass(object):
     KEYCLOAK = {
         "vre": ["kong", "6f6b374b-1da9-4f77-b678-be48606e9905"]
     }
+    KEYCLOAK_REALM = "vre"
     if env == "staging": 
         KEYCLOAK_SERVER_URL = "http://keycloak.utility:8080/vre/auth/"
         KEYCLOAK_VRE_SECRET = "6f595e33-3c8c-496f-b71e-af47f2e73667"

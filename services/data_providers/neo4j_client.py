@@ -86,10 +86,10 @@ class Neo4jClient(object):
     # Datasets
 
     def get_dataset_by_geid(self, geid):
-        response = self.node_query("Dataset", {"global_entity_id": geid})
+        response = self.node_query("Container", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):
-                self.result["error_msg"] = "Dataset not found"
+                self.result["error_msg"] = "Container not found"
                 self.result["code"] = 404
             return self.result
         dataset_node = response["result"][0]
@@ -97,10 +97,10 @@ class Neo4jClient(object):
         return self.result
 
     def get_dataset_by_code(self, code):
-        response = self.node_query("Dataset", {"code": code})
+        response = self.node_query("Container", {"code": code})
         if not response.get("result"):
             if not response.get("error_msg"):
-                response["error_msg"] = "Dataset not found"
+                response["error_msg"] = "Container not found"
                 response["code"] = 404
             return response
         dataset_node = response["result"][0]
@@ -130,10 +130,10 @@ class Neo4jClient(object):
         folder_node = response["result"][0]
 
         response = self.node_query(
-            "Dataset", {"code": folder_node["project_code"]})
+            "Container", {"code": folder_node["project_code"]})
         if not response.get("result"):
             if not response.get("error_msg"):
-                self.result["error_msg"] = "Dataset not found"
+                self.result["error_msg"] = "Container not found"
                 self.result["code"] = 404
             return self.result
         self.result["result"] = response["result"][0]
@@ -167,7 +167,7 @@ class Neo4jClient(object):
         url = ConfigClass.NEO4J_SERVICE + "relations/query"
         payload = {
             "start_label": "User",
-            "end_label": "Dataset",
+            "end_label": "Container",
             "start_params": {"id": user_id}
         }
         response = requests.post(
