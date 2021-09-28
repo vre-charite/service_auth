@@ -35,7 +35,6 @@ class ConfigClass(object):
     LDAP_ADMIN_DN = vault['LDAP_ADMIN_DN']
     LDAP_ADMIN_SECRET = vault['LDAP_ADMIN_SECRET']
     LDAP_OU = vault['LDAP_OU']
-    LDAP_USER_OU = vault['LDAP_USER_OU']
     LDAP_DC1 = vault['LDAP_DC1']
     LDAP_DC2 = vault['LDAP_DC2']
     LDAP_objectclass = vault['LDAP_objectclass']
