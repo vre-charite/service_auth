@@ -1,95 +1,71 @@
 import os
-# os.environ['env'] = 'test'
+import requests
+from requests.models import HTTPError
+
+# os.environ['env']='test'
+
+srv_namespace = "service_auth"
+CONFIG_CENTER = "http://10.3.7.222:5062" \
+    if os.environ.get('env') == "test" \
+    else "http://common.utility:5062"
+
+
+def vault_factory() -> dict:
+    url = CONFIG_CENTER + \
+        "/v1/utility/config/{}".format(srv_namespace)
+    config_center_respon = requests.get(url)
+    if config_center_respon.status_code != 200:
+        raise HTTPError(config_center_respon.text)
+    return config_center_respon.json()['result']
+
+
 class ConfigClass(object):
+    vault = vault_factory()
     env = os.environ.get('env')
+    disk_namespace = os.environ.get('namespace')
+    version = "0.1.0"
+    NEO4J_SERVICE = vault['NEO4J_SERVICE']+"/v1/neo4j/"
+    EMAIL_SERVICE = vault['EMAIL_SERVICE']+"/v1/email"
 
-    # Email Notify Service
-    EMAIL_SERVICE = "http://notification.utility:5065/v1/email"
-    NEO4J_SERVICE = "http://neo4j.utility:5062/v1/neo4j/"
-    if env == "test":
-        NEO4J_SERVICE = "http://10.3.7.216:5062/v1/neo4j/"
-        EMAIL_SERVICE = "http://10.3.7.238:5065/v1/email"
-
-    EMAIL_DEFAULT_NOTIFIER = "notification@vre"
-    EMAIL_ADMIN_CONNECTION = "siteadmin.test@vre.com"
-    if env == "charite":
-        EMAIL_DEFAULT_NOTIFIER = "vre-support@charite.de"
-        EMAIL_ADMIN_CONNECTION = "vre-support@charite.de"
+    EMAIL_DEFAULT_NOTIFIER = 'notification@vre'
+    EMAIL_ADMIN_CONNECTION = 'siteadmin.test@vre.com'
 
     # LDAP configs
-    LDAP_URL = "ldap://10.3.50.101:389/"
-    LDAP_ADMIN_DN = "svc-vre-ad@indoc.local"
-    LDAP_ADMIN_SECRET = "indoc101!"
-    LDAP_OU = "VRE-DEV"
-    LDAP_USER_OU = "VRE-USER-DEV"
-    LDAP_DC1 = "indoc"
-    LDAP_DC2 = "local"
-    LDAP_objectclass = "group"
-    LDAP_USER_GROUP = "vre-users"
-    if env == "staging":
-        LDAP_URL = "ldap://10.3.50.102:389/"
-        LDAP_ADMIN_DN = "svc-vre-ad@indoc.local"
-        LDAP_ADMIN_SECRET = "indoc101!"
-        LDAP_OU = "VRE-STG"
-        LDAP_USER_OU = "VRE-USER-STG"
-        LDAP_DC1 = "indoc"
-        LDAP_DC2 = "local"
-        LDAP_objectclass = "group"
-        LDAP_USER_GROUP = "vre-users"
-    elif env == "charite":
-        LDAP_URL = "ldap://charite.de:389/"
-        LDAP_ADMIN_DN = "svc-vre-ad@CHARITE"
-        LDAP_ADMIN_SECRET = "~*<whA\\5PCnk%X<k"
-        LDAP_OU = "VRE,ou=Charite-Zentrale-Anwendungen"
-        LDAP_DC1 = "charite"
-        LDAP_DC2 = "de"
-        # LDAP_USER_OU = "Charite-Zentrale-Anwendungen"
-        LDAP_USER_GROUP = "vre-users"
+    LDAP_URL = vault['LDAP_URL']+"/"
+    LDAP_ADMIN_DN = vault['LDAP_ADMIN_DN']
+    LDAP_ADMIN_SECRET = vault['LDAP_ADMIN_SECRET']
+    LDAP_OU = vault['LDAP_OU']
+    LDAP_USER_OU = vault['LDAP_USER_OU']
+    LDAP_DC1 = vault['LDAP_DC1']
+    LDAP_DC2 = vault['LDAP_DC2']
+    LDAP_objectclass = vault['LDAP_objectclass']
+    LDAP_USER_GROUP = vault['LDAP_USER_GROUP']
 
     # BFF RDS
-    RDS_HOST = "opsdb.utility"
-    RDS_PORT = "5432"
-    RDS_DBNAME = "INDOC_VRE"
-    RDS_USER = "postgres"
-    RDS_PWD = "postgres"
-    RDS_SCHEMA_DEFAULT = "indoc_vre"
-    if env == "charite":
-        RDS_USER = "indoc_vre"
-        RDS_PWD = os.environ.get('RDS_PWD')
-    OPS_DB_URI = f"postgres://{RDS_USER}:{RDS_PWD}@{RDS_HOST}/{RDS_DBNAME}"
+    RDS_HOST = vault['RDS_HOST']
+    RDS_PORT = vault['RDS_PORT']
+    RDS_DBNAME = vault['RDS_DBNAME']
+    RDS_USER = vault['RDS_USER']
+    RDS_PWD = vault['RDS_PWD']
+    RDS_SCHEMA_DEFAULT = vault['RDS_SCHEMA_DEFAULT']
+    OPS_DB_URI = f"postgresql://{RDS_USER}:{RDS_PWD}@{RDS_HOST}/{RDS_DBNAME}"
 
     # Keycloak config
-    KEYCLOAK_VRE_CLIENT_ID = "kong"
-    KEYCLOAK_GRANT_TYPE = "password"
-    KEYCLOAK_ID = "f4b43b20-92f3-4b1b-bacc-3e191a206145"
-    KEYCLOAK_SERVER_URL = "http://10.3.7.220/vre/auth/"
-    KEYCLOAK_VRE_SECRET = "6f6b374b-1da9-4f77-b678-be48606e9905"
+    KEYCLOAK_VRE_CLIENT_ID = vault['KEYCLOAK_VRE_CLIENT_ID']
+    KEYCLOAK_GRANT_TYPE = vault['KEYCLOAK_GRANT_TYPE']
+    KEYCLOAK_ID = vault['KEYCLOAK_ID']
+    KEYCLOAK_SERVER_URL = vault['KEYCLOAK_SERVER_URL']
+    KEYCLOAK_VRE_SECRET = vault['KEYCLOAK_VRE_SECRET']
     KEYCLOAK = {
-        "vre": ["kong", "6f6b374b-1da9-4f77-b678-be48606e9905"]
+        "vre": ["kong", KEYCLOAK_VRE_SECRET]
     }
+
+    # KEYCLOAK = vault['KEYCLOAK']
     KEYCLOAK_REALM = "vre"
-    if env == "staging": 
-        KEYCLOAK_SERVER_URL = "http://keycloak.utility:8080/vre/auth/"
-        KEYCLOAK_VRE_SECRET = "6f595e33-3c8c-496f-b71e-af47f2e73667"
-        KEYCLOAK = {
-            "vre": ["kong", "6f595e33-3c8c-496f-b71e-af47f2e73667"]
-        }
-        KEYCLOAK_ID = "87d2ce6c-6887-4e02-b2fd-1f07a4ff953c"
-    elif env == "charite":
-        KEYCLOAK_SERVER_URL = "http://keycloak.utility:8080/vre/auth/"
-        KEYCLOAK_VRE_SECRET = "aeeddce5-b0cd-4a4c-9f6d-66b771692724"
-        KEYCLOAK = {
-            "vre": ["kong", "aeeddce5-b0cd-4a4c-9f6d-66b771692724"]
-        }
-        KEYCLOAK_ID = "aadfdc5b-e4e2-4675-9239-e2f9a10bdb50" 
 
     # Password reset config
     PASSWORD_RESET_EXPIRE_HOURS = 1
-    PASSWORD_RESET_URL_PREFIX = "http://10.3.7.220"
-    if env == "staging":
-        PASSWORD_RESET_URL_PREFIX = "https://vre-staging.indocresearch.org"
-    elif env == "charite":
-        PASSWORD_RESET_URL_PREFIX = "https://vre.charite.de"
+    PASSWORD_RESET_URL_PREFIX = vault['PASSWORD_RESET_URL_PREFIX']
 
     PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\-_!%&/()=?*+#,.;])[A-Za-z\d\-_!%&/()=?*+#,.;]{11,30}$"
 
