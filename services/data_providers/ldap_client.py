@@ -29,6 +29,8 @@ class LdapClient():
         self.conn.unbind_s()
 
     def add_user_to_group(self, user_dn):
+        _logger.info("add user: " + user_dn)
+        _logger.info("add user from group dn: " + self.dn)
         operation_list = []
         operation_list.append((ldap.MOD_ADD, 'member', [user_dn.encode('utf-8')]))
         res = self.conn.modify_s(

@@ -52,6 +52,7 @@ class UserADGroupOperations(Resource):
             ldap_cli.disconnect()
             return {"message": "Succeed."}, 200
         except Exception as e:
+            _logger.error('error_message': "[Internal error]" + str(e))
             return {'error_message': "[Internal error]" + str(e)}, 500
 
 
