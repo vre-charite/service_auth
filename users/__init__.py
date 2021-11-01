@@ -1,5 +1,6 @@
 from flask_restx import Api, Resource, fields
 from services.logger_services.logger_factory_service import SrvLoggerFactory
+from resources.error_handler import APIException
 
 # from flask_restful import Api
 module_api = Api(
@@ -9,10 +10,14 @@ module_api = Api(
     doc='/v1/api-doc'
 )
 
+
 # api = Api()
 api = module_api.namespace('user_management', description='Operation on users', path ='/')
 api.logger.addHandler(SrvLoggerFactory("auth").get_logger())
 
+@module_api.errorhandler(APIException)
+def http_exception_handler(exc: APIException):
+    return exc.content, exc.status_code
 
 # user operations
 from users.ops_user import UserAuth, UserRefresh, UserLastLogin, UserStatus, UserProjectRole
@@ -40,3 +45,9 @@ api.add_resource(UserADGroupOperations, '/v1/user/ad-group')
 
 from users.permissions.permissions import Authorize 
 api.add_resource(Authorize, '/v1/authorize')
+
+from users.accounts import AccountRequest, ContractRequest
+api.add_resource(AccountRequest, '/v1/accounts')
+api.add_resource(ContractRequest, '/v1/accounts/contract')
+
+

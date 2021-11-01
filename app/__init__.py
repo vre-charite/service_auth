@@ -23,9 +23,9 @@ def create_app(extra_config_settings={}):
         supports_credentials=True, 
         intercept_exceptions=False)
 
-
     # dynamic add the dataset module by the config we set
     for apis in ConfigClass.api_modules:
         api = importlib.import_module(apis)
         api.module_api.init_app(app)
+
     return app

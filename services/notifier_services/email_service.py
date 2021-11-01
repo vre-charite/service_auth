@@ -5,16 +5,12 @@ import json
 
 
 class SrvEmail(metaclass=MetaService):
-    def send(self, subject, receiver: list = [], content="", msg_type="plain", sender=ConfigClass.EMAIL_DEFAULT_NOTIFIER, \
-            template=None, template_kwargs={}):
-        '''
-        (str, str, str, str, str) -> dict   #**TypeContract**
-        '''
+    def send(self, subject, receiver, sender, content="", msg_type="plain", template=None, template_kwargs={}):
         url = ConfigClass.EMAIL_SERVICE
         payload = {
             "subject": subject,
             "sender": sender,
-            "receiver": receiver,
+            "receiver": [receiver],
             "msg_type": msg_type,
         }
         if content:

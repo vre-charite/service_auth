@@ -97,12 +97,21 @@ class LdapClient():
 
     def get_user_by_username(self, username):
         '''
-        Return ldap user dn by given cn
+        Return ldap user dn by given username
         '''
         users = self.conn.search_s(
             "dc={},dc={}".format(
                 ConfigClass.LDAP_DC1, ConfigClass.LDAP_DC2),
             ldap.SCOPE_SUBTREE,
-            u"(cn={})".format(username)
+            f'(&(objectClass=user)(sAMAccountName={username}))'
         )
-        return users
+        user_found = None
+        for user_dn, entry in users:
+            if 'sAMAccountName' in entry:
+                decoded_username = entry['sAMAccountName'][0].decode("utf-8")
+                if decoded_username == username:
+                    user_found = (user_dn, entry)
+        _logger.info("found user by username: " + str(user_found))
+        if not user_found:
+            return None, None
+        return user_found

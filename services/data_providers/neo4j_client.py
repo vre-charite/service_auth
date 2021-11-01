@@ -85,7 +85,7 @@ class Neo4jClient(object):
 
     # Datasets
 
-    def get_dataset_by_geid(self, geid):
+    def get_container_by_geid(self, geid):
         response = self.node_query("Container", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):
@@ -96,7 +96,7 @@ class Neo4jClient(object):
         self.result["result"] = response["result"][0]
         return self.result
 
-    def get_dataset_by_code(self, code):
+    def get_container_by_code(self, code):
         response = self.node_query("Container", {"code": code})
         if not response.get("result"):
             if not response.get("error_msg"):
@@ -107,8 +107,8 @@ class Neo4jClient(object):
         response["result"] = dataset_node
         return response
 
-    def get_dataset_role(self, dataset_geid, user_id):
-        response = self.get_dataset_by_geid(dataset_geid)
+    def get_container_role(self, dataset_geid, user_id):
+        response = self.get_container_by_geid(dataset_geid)
         if response.get("error_msg"):
             return response
         dataset_node = response["result"]
@@ -120,7 +120,7 @@ class Neo4jClient(object):
         self.result["result"] = relation["result"][0]['r']['type']
         return self.result
 
-    def get_dataset_from_folder(self, geid):
+    def get_container_from_folder(self, geid):
         response = self.node_query("Folder", {"global_entity_id": geid})
         if not response.get("result"):
             if not response.get("error_msg"):

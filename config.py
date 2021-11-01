@@ -26,9 +26,16 @@ class ConfigClass(object):
     version = "0.1.0"
     NEO4J_SERVICE = vault['NEO4J_SERVICE']+"/v1/neo4j/"
     EMAIL_SERVICE = vault['EMAIL_SERVICE']+"/v1/email"
+    UTILITY_SERVICE = vault["UTILITY_SERVICE"]
 
-    EMAIL_DEFAULT_NOTIFIER = 'notification@vre'
-    EMAIL_ADMIN_CONNECTION = 'siteadmin.test@vre.com'
+    # Email addresses
+    EMAIL_SUPPORT = "jzhang@indocresearch.org"
+    EMAIL_ADMIN = "cchen@indocresearch.org"
+    EMAIL_HELPDESK = "helpdesk@vre"
+    if env == 'charite':
+        EMAIL_SUPPORT = "vre-support@charite.de"
+        EMAIL_ADMIN = "vre-admin@charite.de"
+        EMAIL_HELPDESK = "helpdesk@charite.de"
 
     # LDAP configs
     LDAP_URL = vault['LDAP_URL']+"/"
@@ -62,11 +69,16 @@ class ConfigClass(object):
     # KEYCLOAK = vault['KEYCLOAK']
     KEYCLOAK_REALM = "vre"
 
+    VRE_DOMAIN = vault["VRE_DOMAIN"]
+
     # Password reset config
     PASSWORD_RESET_EXPIRE_HOURS = 1
     PASSWORD_RESET_URL_PREFIX = vault['PASSWORD_RESET_URL_PREFIX']
 
     PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\-_!%&/()=?*+#,.;])[A-Za-z\d\-_!%&/()=?*+#,.;]{11,30}$"
+
+    TEST_PROJECT_CODE = "indoctestproject"
+    TEST_PROJECT_ROLE = "collaborator"
 
     api_modules = ["users"]
     JWT_AUTH_URL_RULE = None
