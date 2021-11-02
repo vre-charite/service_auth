@@ -82,6 +82,7 @@ class AccountRequest(Resource):
                         "project": ConfigClass.TEST_PROJECT_CODE,
                         "status": "Pending Review",
                         "notes": notes,
+                        "url": ConfigClass.VRE_DOMAIN + "/vre",
                     },
                 )
                 return True
@@ -148,6 +149,7 @@ class AccountRequest(Resource):
                     "status": "Denied",
                     "notes": "Username does not exist in Active Directory",
                     "send_date": get_formatted_datetime("CET"),
+                    "url": ConfigClass.VRE_DOMAIN + "/vre",
                 },
             )
             return res.response, res.code
@@ -181,6 +183,7 @@ class AccountRequest(Resource):
                     "title": "VRE test account request submitted and approved",
                     "status": "Approved",
                     "send_date": get_formatted_datetime("CET"),
+                    "url": ConfigClass.VRE_DOMAIN + "/vre",
                 },
             )
             email_service.send(
@@ -217,6 +220,7 @@ class AccountRequest(Resource):
                     "status": "Pending Review",
                     "notes": "Email address does not match username in Active Directory",
                     "send_date": get_formatted_datetime("CET"),
+                    "url": ConfigClass.VRE_DOMAIN + "/vre",
                 },
             )
         ldap_client.disconnect()
@@ -249,6 +253,7 @@ class ContractRequest(Resource):
                 "agreement_info": agreement_info,
                 "why_interested": why_interested,
                 "send_date": get_formatted_datetime("CET"),
+                "url": ConfigClass.VRE_DOMAIN + "/vre",
             },
         )
         email_service.send(
