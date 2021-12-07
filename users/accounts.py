@@ -152,6 +152,18 @@ class AccountRequest(Resource):
                     "url": ConfigClass.VRE_DOMAIN + "/vre",
                 },
             )
+            email_service.send(
+                subject="Your request for a test account is under review",
+                receiver=email,
+                sender=ConfigClass.EMAIL_SUPPORT,
+                msg_type="html",
+                template="test_account/review_notification.html",
+                template_kwargs={
+                    "first_name": username,
+                    "url_guide": ConfigClass.VRE_DOMAIN + "/xwiki",
+                    "support_email": ConfigClass.EMAIL_SUPPORT,
+                },
+            )
             return res.response, res.code
 
         ldap_email = user_data.get("mail")[0].decode()
@@ -203,7 +215,7 @@ class AccountRequest(Resource):
                 },
             )
         else:
-            # User found in AD but email doesn't match, send email to support
+            # User found in AD but email doesn't match, send email to support and notify user
             logger.info(f"User found in AD, email doesn't match: {username}")
             email_service.send(
                 subject="Action Required: Request for VRE Test Account submitted, review required",
@@ -221,6 +233,18 @@ class AccountRequest(Resource):
                     "notes": "Email address does not match username in Active Directory",
                     "send_date": get_formatted_datetime("CET"),
                     "url": ConfigClass.VRE_DOMAIN + "/vre",
+                },
+            )
+            email_service.send(
+                subject="Your request for a test account is under review",
+                receiver=email,
+                sender=ConfigClass.EMAIL_SUPPORT,
+                msg_type="html",
+                template="test_account/review_notification.html",
+                template_kwargs={
+                    "first_name": first_name,
+                    "url_guide": ConfigClass.VRE_DOMAIN + "/xwiki",
+                    "support_email": ConfigClass.EMAIL_SUPPORT,
                 },
             )
         ldap_client.disconnect()
