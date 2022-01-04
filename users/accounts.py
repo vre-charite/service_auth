@@ -172,7 +172,7 @@ class AccountRequest(Resource):
             first_name = username
         last_name = user_data.get("sn", "")[0].decode()
 
-        if ldap_email == email:
+        if ldap_email.lower() == email.lower():
             # User found in AD, create user and send email to user and support
             logger.info(f"User found in AD, email matches: {username}")
             self.add_user_to_ad_group(user_dn, "vre-users")
