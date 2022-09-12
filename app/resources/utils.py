@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright 2022 Indoc Research
 # 
 # Licensed under the EUPL, Version 1.2 or – as soon they
@@ -19,5 +18,22 @@
 # permissions and limitations under the Licence.
 # 
 
+from datetime import datetime
 
-gunicorn -c gunicorn_config.py "run:app" -k uvicorn.workers.UvicornWorker
+import requests
+from pytz import timezone
+
+from app.config import ConfigSettings
+
+
+def mask_email(email):
+    sections = email.split('@')
+    first = ''.join(['*' for i in sections[0][0:-2]])
+    second = ''.join([i if i == '.' else '*' for i in sections[1]])
+    return sections[0][0] + first + sections[0][-1] + '@' + second
+
+
+def get_formatted_datetime(tz):
+    cet = timezone(tz)
+    now = datetime.now(cet)
+    return now.strftime('%Y-%m-%d, %-I:%M%p (%Z)')

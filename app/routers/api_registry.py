@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright 2022 Indoc Research
 # 
 # Licensed under the EUPL, Version 1.2 or – as soon they
@@ -19,5 +18,18 @@
 # permissions and limitations under the Licence.
 # 
 
+from fastapi import FastAPI
 
-gunicorn -c gunicorn_config.py "run:app" -k uvicorn.workers.UvicornWorker
+from app.routers import accounts, ops_admin, ops_user, user_account_management
+from app.routers.invitation import invitation
+from app.routers.permissions import permissions
+
+
+def api_registry(app: FastAPI):
+    # app.include_router(api_root.router)
+    app.include_router(ops_user.router, prefix='/v1')
+    app.include_router(user_account_management.router, prefix='/v1')
+    app.include_router(permissions.router, prefix='/v1')
+    app.include_router(accounts.router, prefix='/v1')
+    app.include_router(ops_admin.router, prefix='/v1')
+    app.include_router(invitation.router, prefix='/v1')

@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright 2022 Indoc Research
 # 
 # Licensed under the EUPL, Version 1.2 or – as soon they
@@ -19,5 +18,24 @@
 # permissions and limitations under the Licence.
 # 
 
+from enum import Enum
+from typing import Any, Dict, List, Optional
+from uuid import UUID
 
-gunicorn -c gunicorn_config.py "run:app" -k uvicorn.workers.UvicornWorker
+from pydantic import BaseModel, Field
+from pydantic.types import constr
+
+
+class AccountRequestPOST(BaseModel):
+
+    email: str
+    username: str
+
+
+class ContractRequestPOST(BaseModel):
+
+    contract_description: str
+    interest_description: str
+    email: str
+    first_name: str
+    last_name: str

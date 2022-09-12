@@ -1,258 +1,250 @@
-import unittest
-from unittest import mock
-import json
-import requests
-import keycloak
+# Copyright 2022 Indoc Research
+# 
+# Licensed under the EUPL, Version 1.2 or – as soon they
+# will be approved by the European Commission - subsequent
+# versions of the EUPL (the "Licence");
+# You may not use this work except in compliance with the
+# Licence.
+# You may obtain a copy of the Licence at:
+# 
+# https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+# 
+# Unless required by applicable law or agreed to in
+# writing, software distributed under the Licence is
+# distributed on an "AS IS" basis,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied.
+# See the Licence for the specific language governing
+# permissions and limitations under the Licence.
+# 
+
 from keycloak import exceptions
-import warnings
 
-from config import ConfigClass
-from app import create_app
-from module_keycloak.ops_admin import OperationsAdmin
-from module_keycloak.ops_user import OperationsUser
-
-
-EXCEPTION_DATA = {
-    "response_body": '{ "error": "error" }',
-    "error_message": '{ "error": "error" }',
-    "response_code": 500
+test_user = {
+    'username': 'test_user',
+    'email': 'test_user',
+    'id': 'test_user',
+    'firstName': 'firstName',
+    'lastName': 'lastName',
+    'attributes': {'status': ['active']},
 }
 
+# user authentication method
 
-class UserTests(unittest.TestCase):
 
-    AUTH_DATA = {
-        "realm": "vre",
-        "username": "unittestuser",
-        "password": "Testing123!",
+def test_authentication(test_client, mocker):
+    mocker.patch(
+        'app.resources.keycloak_api.ops_user.OperationsUser.get_token',
+        return_value={'access_token': 'test', 'refresh_token': 'test'},
+    )
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_by_username', return_value=test_user)
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.update_user_attributes')
+
+    response = test_client.post('/v1/users/auth', json={'username': 'test_user', 'password': 'test_user'})
+    assert response.status_code == 200
+
+
+def test_authentication_with_disable(test_client, mocker):
+    test_user_disable = {
+        'username': 'test_user',
+        'email': 'test_user',
+        'id': 'test_user',
+        'firstName': 'firstName',
+        'lastName': 'lastName',
+        'attributes': {'status': ['disabled']},
     }
+    mocker.patch(
+        'app.resources.keycloak_api.ops_user.OperationsUser.get_token',
+        return_value={'access_token': 'test', 'refresh_token': 'test'},
+    )
+    mocker.patch(
+        'app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_by_username', return_value=test_user_disable
+    )
 
-    def setUp(self):
-        warnings.simplefilter("ignore", ResourceWarning)
-        app = create_app()
+    response = test_client.post('/v1/users/auth', json={'username': 'test_user', 'password': 'test_user'})
+    assert response.status_code == 401
+    assert response.json().get('error_msg') == 'User is disabled'
 
-        app.config['TESTING'] = True
-        app.config['DEBUG'] = True
-        self.app = app.test_client()
 
-        operations_admin = OperationsAdmin("vre")
-        try:
-            # Delete the test user if it already exists
-            operations_admin.delete_user("unittestuser")
-        except keycloak.exceptions.KeycloakGetError:
-            pass
+def test_authentication_with_password_fail(test_client, mocker):
 
-        self.user = operations_admin.create_user(
-            "unittestuser", 
-            "Testing123!", 
-            "unittesting@test.com", 
-            "Test",
-            "User", 
-            cred_type = "password",
-            enabled = True
+    m = mocker.patch(
+        'app.resources.keycloak_api.ops_user.OperationsUser.get_token',
+        return_value={'access_token': 'test', 'refresh_token': 'test'},
+    )
+    m.side_effect = exceptions.KeycloakAuthenticationError
+
+    response = test_client.post('/v1/users/auth', json={'username': 'test_user', 'password': 'test_user'})
+    assert response.status_code == 401
+
+
+def test_authentication_with_user_not_found(test_client, mocker):
+
+    m = mocker.patch(
+        'app.resources.keycloak_api.ops_user.OperationsUser.get_token',
+        return_value={'access_token': 'test', 'refresh_token': 'test'},
+    )
+    m.side_effect = exceptions.KeycloakGetError
+
+    response = test_client.post('/v1/users/auth', json={'username': 'test_user', 'password': 'test_user'})
+    assert response.status_code == 404
+
+
+# refresh token tests
+def test_token_refresh(test_client, mocker):
+
+    m = mocker.patch(
+        'app.resources.keycloak_api.ops_user.OperationsUser.get_refresh_token',
+        return_value={'access_token': 'test', 'refresh_token': 'test'},
+    )
+
+    response = test_client.post(
+        '/v1/users/refresh',
+        json={
+            'refreshtoken': 'test_token',
+        },
+    )
+    assert response.status_code == 200
+
+
+def test_token_refresh_missing_payload(test_client, mocker):
+
+    m = mocker.patch(
+        'app.resources.keycloak_api.ops_user.OperationsUser.get_refresh_token',
+        return_value={'access_token': 'test', 'refresh_token': 'test'},
+    )
+
+    response = test_client.post('/v1/users/refresh', json={})
+    assert response.status_code == 422
+
+
+# user realm operation
+def test_add_user_keycloak_realm_role(test_client, mocker):
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_by_email', return_value={'id': 'test'})
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.assign_user_role', return_value={})
+
+    response = test_client.post('/v1/user/project-role', json={'email': 'test_email', 'project_role': 'test_project'})
+    assert response.status_code == 200
+
+
+def test_remove_user_keycloak_realm_role(test_client, mocker):
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_by_email', return_value={'id': 'test'})
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.delete_role_of_user', return_value={})
+
+    response = test_client.delete('/v1/user/project-role', json={'email': 'test_email', 'project_role': 'test_project'})
+    assert response.status_code == 200
+
+
+def create_test_user_list(size=10):
+    user_list = []
+    for x in range(size):
+        user_list.append(
+            {
+                'username': 'test_user_%d' % x,
+                'email': 'test_user_%d@email.com' % x,
+                'id': 'test_user_%d' % x,
+                'firstName': 'firstName_%d' % x,
+                'lastName': 'lastName_%d' % x,
+                'attributes': {'status': ['active']},
+            }
         )
-        return super().setUp()
 
-    def tearDown(self): 
-        operations_admin = OperationsAdmin("vre")
-        operations_admin.delete_user(self.user)
-        return super().tearDown()
-
-    def test_docs(self):
-        response = self.app.get('/v1/api-doc')
-        print(response)
-        self.assertEqual(response.status_code, 200)
-
-    def test_user_auth(self):
-        response = self.app.post('/v1/users/auth', json=self.AUTH_DATA)
-        self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["error_msg"], "")
-        self.assertTrue(response_json["result"]["access_token"])
-
-    def test_auth_missing(self):
-        data = self.AUTH_DATA.copy()
-        del data["password"]
-        response = self.app.post('/v1/users/auth', json=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "Missing required information")
-
-    @mock.patch.object(OperationsUser, '__init__', side_effect=keycloak.exceptions.KeycloakAuthenticationError(**EXCEPTION_DATA))
-    def test_auth_keycloakauth_exception(self, mock_data):
-        response = self.app.post('/v1/users/auth', json=self.AUTH_DATA)
-        self.assertEqual(response.status_code, 500)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"]["error"], "error")
-
-    @mock.patch.object(OperationsUser, '__init__', side_effect=keycloak.exceptions.KeycloakGetError(**EXCEPTION_DATA))
-    def test_auth_keycloakget_exception(self, mock_data):
-        response = self.app.post('/v1/users/auth', json=self.AUTH_DATA)
-        self.assertEqual(response.status_code, 500)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"]["error"], "error")
-
-    @mock.patch.object(OperationsUser, '__init__', side_effect=Exception())
-    def test_auth_exception(self, mock_data):
-        response = self.app.post('/v1/users/auth', json=self.AUTH_DATA)
-        self.assertEqual(response.status_code, 500)
-        response_json = json.loads(response.data)
-        print(response_json)
-        self.assertEqual(response_json["result"], "User authentication failed : ")
-
-    def test_user_refresh(self):
-        response = self.app.post('/v1/users/auth', json=self.AUTH_DATA)
-        self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.data)
-        refresh_data = {
-            "realm": "vre",
-            "refreshtoken": response_json["result"]["refresh_token"]
-        }
-        response = self.app.post('/v1/users/refresh', json=refresh_data)
-        self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["error_msg"], "")
-        self.assertTrue(response_json["result"]["refresh_token"])
-
-    def test_user_refresh_missing(self):
-        response = self.app.post('/v1/users/refresh')
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "Missing refresh token")
-
-    @mock.patch.object(OperationsUser, '__init__', side_effect=keycloak.exceptions.KeycloakGetError(**EXCEPTION_DATA))
-    def test_refresh_keycloakget_exception(self, mock_data):
-        refresh_data = {
-            "realm": "vre",
-            "refreshtoken": "test"
-        }
-        response = self.app.post('/v1/users/refresh', json=refresh_data)
-        self.assertEqual(response.status_code, 500)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], {"error": "error"})
-
-    @unittest.skip("deprecated the APIs")
-    def test_user_password(self):
-        data = {
-            "username": "unittestuser",
-            "old_password": "Testing123!",
-            "new_password": "Testing234!",
-            "realm": "vre"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "success")
-
-        auth_data = {
-            "username": "unittestuser",
-            "password": "Testing234!",
-            "realm": "vre"
-        }
-        response = self.app.post('/v1/users/auth', json=auth_data)
-        self.assertEqual(response.status_code, 200)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["error_msg"], "")
-        self.assertTrue(response_json["result"]["access_token"])
-
-        # Change the password back so it's consistant for other tests
-        data["old_password"] = "Testing234!"
-        data["new_password"] = "Testing123!"
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 200)
-    
-    @unittest.skip("deprecated the APIs")
-    def test_password_missing(self):
-        data = {
-            "username": "unittestuser",
-            "new_password": "Testing234!",
-            "realm": "vre"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "missing username, old password or new password")
-
-    @unittest.skip("deprecated the APIs")
-    def test_password_insecure(self):
-        data = {
-            "username": "unittestuser",
-            "old_password": "Testing123!",
-            "new_password": "test",
-            "realm": "vre"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 406)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "invalid new password")
-
-    @unittest.skip("deprecated the APIs")
-    #@mock.patch.object(OperationsUser, '__init__', side_effect=Exception())
-    def test_password_user_exception(self, mock_data):
-        data = {
-            "username": "unittestuser",
-            "old_password": "Testing123!",
-            "new_password": "Testing234!",
-            "realm": "vre"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], "incorrect realm, username or old password: ")
-
-    @unittest.skip("deprecated the APIs")
-    #@mock.patch.object(OperationsAdmin, '__init__', side_effect=Exception())
-    def test_password_admin_exception(self, mock_data):
-        data = {
-            "username": "unittestuser",
-            "old_password": "Testing123!",
-            "new_password": "Testing234!",
-            "realm": "vre"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 500)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], 'invalid admin credentials: ')
-
-    @unittest.skip("deprecated the APIs")
-    #@mock.patch.object(OperationsAdmin, 'get_user_id', side_effect=Exception())
-    def test_password_get_user_exception(self, mock_data):
-        data = {
-            "username": "unittestuser",
-            "old_password": "Testing123!",
-            "new_password": "Testing234!",
-            "realm": "vre"
-        }
-        response = self.app.put('/v1/users/password', json=data)
-        self.assertEqual(response.status_code, 500)
-        response_json = json.loads(response.data)
-        self.assertEqual(response_json["result"], 'cannot get user id: ')
-
-    def test_user_status(self):
-        data = {
-            "email": "jiayu.zhang015+10@gmail.com",
-        }
-        response = self.app.get('/v1/user/status', query_string=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["email"], "jiayu.zhang015+10@gmail.com")
-        self.assertTrue(response.get_json()["status"] in ["active", "disabled", "hibernate"])
-
-    def test_user_status_missing_email(self):
-        data = {
-        }
-        response = self.app.get('/v1/user/status', query_string=data)
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json()["result"], "Missing email")
-
-    def test_user_status_bad_email(self):
-        data = {
-            "email": "afakeemailthatcertainlydoesnotexist@fake.ca",
-        }
-        response = self.app.get('/v1/user/status', query_string=data)
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.get_json()["result"], "User not found")
+    return user_list
 
 
-if __name__ == "__main__":
-    unittest.main(warnings='ignore')
+# list platform user test
+def test_list_platform_user_pagination_1(test_client, mocker):
+    num_of_user = 20
+    page_size = 10
+    users = create_test_user_list(num_of_user)
 
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_count', return_value=len(users))
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_all_users', return_value=users)
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_users_in_role', return_value=[])
+
+    response = test_client.get('/v1/users', params={'page_size': page_size})
+    assert response.status_code == 200
+    assert len(response.json().get('result')) == page_size
+
+
+def test_list_platform_user_pagination_2(test_client, mocker):
+    num_of_user = 20
+    page_size = 5
+    users = create_test_user_list(num_of_user)
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_count', return_value=len(users))
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_all_users', return_value=users)
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_users_in_role', return_value=[])
+
+    response = test_client.get('/v1/users', params={'page_size': page_size})
+    assert response.status_code == 200
+    assert len(response.json().get('result')) == page_size
+    assert response.json().get('num_of_pages') == (num_of_user / page_size)
+
+
+def test_list_platform_user_platform_admin_check(test_client, mocker):
+    num_of_user = 20
+    users = create_test_user_list(num_of_user)
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_count', return_value=len(users))
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_all_users', return_value=users)
+    mocker.patch(
+        'app.resources.keycloak_api.ops_admin.OperationsAdmin.get_users_in_role',
+        return_value=[{'username': 'test_user_1'}],
+    )
+
+    response = test_client.get('/v1/users', params={})
+    assert response.status_code == 200
+    for x in response.json().get('result'):
+        if x.get('username') == 'test_user_1':
+            assert x.get('role') == 'admin'
+
+
+def test_list_users_under_roles_filter_order_by_email(test_client, mocker):
+    num_of_user = 20
+    page_size = 10
+    users = create_test_user_list(num_of_user)
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_count', return_value=len(users))
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_all_users', return_value=users)
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_users_in_role', return_value=[])
+
+    response = test_client.get('/v1/users', params={'order_by': 'email', 'order_type': 'desc'})
+    assert response.status_code == 200
+    user_list = response.json().get('result')
+    assert user_list[0].get('email') > user_list[1].get('email')
+
+
+def test_list_users_under_roles_filter_order_by_username(test_client, mocker):
+    num_of_user = 20
+    page_size = 10
+    users = create_test_user_list(num_of_user)
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_count', return_value=len(users))
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_all_users', return_value=users)
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_users_in_role', return_value=[])
+
+    response = test_client.get('/v1/users', params={'order_by': 'username', 'order_type': 'desc'})
+    assert response.status_code == 200
+    user_list = response.json().get('result')
+    assert user_list[0].get('email') > user_list[1].get('email')
+
+
+def test_list_users_under_roles_filter_order_by_last_name(test_client, mocker):
+    num_of_user = 20
+    page_size = 10
+    users = create_test_user_list(num_of_user)
+
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_user_count', return_value=len(users))
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_all_users', return_value=users)
+    mocker.patch('app.resources.keycloak_api.ops_admin.OperationsAdmin.get_users_in_role', return_value=[])
+
+    response = test_client.get('/v1/users', params={'order_by': 'last_name', 'order_type': 'desc'})
+    assert response.status_code == 200
+    user_list = response.json().get('result')
+    assert user_list[0].get('last_name') > user_list[1].get('last_name')
+
+
+# disable/enable test
