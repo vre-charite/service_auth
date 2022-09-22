@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright 2022 Indoc Research
 # 
 # Licensed under the EUPL, Version 1.2 or – as soon they
@@ -19,5 +18,8 @@
 # permissions and limitations under the Licence.
 # 
 
-
-gunicorn -c gunicorn_config.py "run:app" -k uvicorn.workers.UvicornWorker
+class MetaService(type):
+    def __new__(cls, name: str, bases, namespace, **kwargs):
+        if not name.startswith('Srv'):
+            raise TypeError('[Fatal] Invalid Service Statement: class name should start with "Srv"', name)
+        return super().__new__(cls, name, bases, namespace, **kwargs)

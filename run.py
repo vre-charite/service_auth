@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright 2022 Indoc Research
 # 
 # Licensed under the EUPL, Version 1.2 or – as soon they
@@ -19,5 +18,12 @@
 # permissions and limitations under the Licence.
 # 
 
+import uvicorn
 
-gunicorn -c gunicorn_config.py "run:app" -k uvicorn.workers.UvicornWorker
+from app import create_app
+from app.config import ConfigSettings
+
+app = create_app()
+
+if __name__ == '__main__':
+    uvicorn.run('run:app', host=ConfigSettings.HOST, port=ConfigSettings.PORT, log_level='info', reload=True)

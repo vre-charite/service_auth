@@ -1,4 +1,3 @@
-#!/bin/sh
 # Copyright 2022 Indoc Research
 # 
 # Licensed under the EUPL, Version 1.2 or – as soon they
@@ -19,5 +18,16 @@
 # permissions and limitations under the Licence.
 # 
 
+import httpx
 
-gunicorn -c gunicorn_config.py "run:app" -k uvicorn.workers.UvicornWorker
+from app.config import ConfigSettings
+from app.models.api_response import EAPIResponseCode
+from app.resources.error_handler import APIException
+
+
+def get_project_by_geid(geid: str) -> dict:
+    payload = {'global_entity_id': geid}
+    response = httpx.post(ConfigSettings.NEO4J_SERVICE + 'nodes/Container/query', json=payload)
+    if not response.json():
+        raise APIException(status_code=EAPIResponseCode.not_found.value, error_msg=f'Project not found: {geid}')
+    return response.json()[0]
