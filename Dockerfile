@@ -35,7 +35,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir poetry
-COPY poetry.lock pyproject.toml ./
+COPY pyproject.toml ./
 RUN poetry config virtualenvs.create false && poetry config http-basic.pilot ${PIP_USERNAME} ${PIP_PASSWORD}
 RUN poetry install --no-dev --no-root --no-interaction
 COPY . .
