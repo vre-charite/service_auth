@@ -34,8 +34,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     ln -s /usr/bin/vim.tiny /usr/bin/vim && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir poetry
-COPY pyproject.toml ./
+RUN pip install --no-cache-dir poetry==1.2.2
+COPY poetry.lock pyproject.toml ./
 RUN poetry config virtualenvs.create false && poetry config http-basic.pilot ${PIP_USERNAME} ${PIP_PASSWORD}
 RUN poetry install --no-dev --no-root --no-interaction
 COPY . .
