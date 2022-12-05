@@ -18,23 +18,25 @@
 # permissions and limitations under the Licence.
 # 
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi_sqlalchemy import DBSessionMiddleware
+
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-from app.config import ConfigSettings, get_settings
-from app.resources.error_handler import APIException
-from app.routers.api_registry import api_registry
+from config import get_settings, ConfigSettings
+from users.api_registry import api_registry
+from resources.error_handler import APIException
 
 
 def create_app():
@@ -46,7 +48,6 @@ def create_app():
         docs_url='/v1/api-doc',
         version=ConfigSettings.VERSION,
     )
-    app.add_middleware(DBSessionMiddleware, db_url=ConfigSettings.RDS_DB_URI)
 
     app.add_middleware(
         CORSMiddleware,
@@ -62,6 +63,7 @@ def create_app():
             status_code=exc.status_code,
             content=exc.content,
         )
+
 
     api_registry(app)
 

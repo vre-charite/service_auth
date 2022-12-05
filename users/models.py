@@ -18,12 +18,23 @@
 # permissions and limitations under the Licence.
 # 
 
-import uvicorn
+from pydantic import BaseModel
 
-from app import create_app
-from config import ConfigSettings
 
-app = create_app()
+class BaseResponse(BaseModel):
+    code: int = 200
+    error_msg: str = ""
+    result: list = []
+    page: int = 1
+    total: int = 1
+    num_of_pages: int = 1
 
-if __name__ == '__main__':
-    uvicorn.run('run:app', host=ConfigSettings.HOST, port=ConfigSettings.PORT, log_level='info', reload=True)
+
+class PostAuthRequest(BaseModel):
+    username: str
+    passsword: str
+    realm: str
+
+
+class PostAuthResponse(BaseResponse):
+    result: str = 'success'

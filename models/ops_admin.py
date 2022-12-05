@@ -18,12 +18,36 @@
 # permissions and limitations under the Licence.
 # 
 
-import uvicorn
+from enum import Enum
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from uuid import UUID
 
-from app import create_app
-from config import ConfigSettings
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic.types import constr
 
-app = create_app()
 
-if __name__ == '__main__':
-    uvicorn.run('run:app', host=ConfigSettings.HOST, port=ConfigSettings.PORT, log_level='info', reload=True)
+class UserGroupPOST(BaseModel):
+
+    username: str
+    groupname: str
+
+
+class RealmRolesPOST(BaseModel):
+
+    project_roles: list
+    project_code: str
+
+
+class UserInRolePOST(BaseModel):
+    role_names: list 
+    username: str=None
+    email: str=None
+    page: int=0
+    page_size: int=10
+    order_by: str=None
+    order_type: str="asc"
+    status: str="active"

@@ -29,6 +29,7 @@ repos:
         args: [
             '--profile=black',
             '--filter-files',
+            '--force-single-line-imports',
             '--reverse-relative',
         ]
 

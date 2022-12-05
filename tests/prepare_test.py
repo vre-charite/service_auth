@@ -18,12 +18,17 @@
 # permissions and limitations under the Licence.
 # 
 
-import uvicorn
+from fastapi.testclient import TestClient
+from run import app
 
-from app import create_app
-from config import ConfigSettings
 
-app = create_app()
+class SetupTest:
 
-if __name__ == '__main__':
-    uvicorn.run('run:app', host=ConfigSettings.HOST, port=ConfigSettings.PORT, log_level='info', reload=True)
+    def __init__(self, log):
+        print("prepare the dataset file test")
+        self.log = log
+        self.app = self.create_test_client()
+
+    def create_test_client(self):
+        client = TestClient(app)
+        return client

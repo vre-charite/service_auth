@@ -18,12 +18,4 @@
 # permissions and limitations under the Licence.
 # 
 
-import uvicorn
 
-from app import create_app
-from config import ConfigSettings
-
-app = create_app()
-
-if __name__ == '__main__':
-    uvicorn.run('run:app', host=ConfigSettings.HOST, port=ConfigSettings.PORT, log_level='info', reload=True)

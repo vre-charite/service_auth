@@ -21,40 +21,6 @@
 version: '3'
 services:
   web:
-    build:
-      context: .
-      args:
-        PIP_USERNAME: ${PIP_USERNAME}
-        PIP_PASSWORD: ${PIP_PASSWORD}
+    build: .
     ports:
-      - "5062:8000"
-    environment:
-      port: 8000
-      RDS_DB_URI: "postgresql://postgres:postgres@db:5432/auth"
-      RDS_SCHEMA_PREFIX: "pilot"
-    env_file:
-      - .env
-    volumes:
-      - .:/usr/src/app
-    depends_on:
-      - db
-    command:
-      sh -c "
-        pip install alembic
-
-        alembic upgrade head
-
-        uvicorn run:app --reload --host 0.0.0.0
-      "
-
-  db:
-    image: 'postgres:14.1'
-    ports:
-      - 5432:5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - ./postgres-data:/var/lib/postgresql
-      - ./migrations/scripts/create_db.sql:/docker-entrypoint-initdb.d/01.sql
-      - ./migrations/scripts/create_schema.sql:/docker-entrypoint-initdb.d/02.sql
+      - "5061:5061"

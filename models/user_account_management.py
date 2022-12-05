@@ -18,12 +18,31 @@
 # permissions and limitations under the Licence.
 # 
 
-import uvicorn
+from enum import Enum
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from uuid import UUID
 
-from app import create_app
-from config import ConfigSettings
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic.types import constr
 
-app = create_app()
 
-if __name__ == '__main__':
-    uvicorn.run('run:app', host=ConfigSettings.HOST, port=ConfigSettings.PORT, log_level='info', reload=True)
+class UserADGroupOperationsPUT(BaseModel):
+    """user authentication model."""
+
+    operation_type: str
+    group_code: str
+    user_email: str
+    # realm: str
+
+
+class UserManagementV1PUT(BaseModel):
+
+    operation_type: str
+    user_email: str
+    realm: str
+    user_geid: Optional[str] = None
+    payload: Dict

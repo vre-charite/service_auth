@@ -1,7 +1,6 @@
 # Folders
 .git
 .venv
-.env
 venv
 env
 kubernetes

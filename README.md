@@ -20,7 +20,7 @@
  
 -->
 
-This repo documents the service of user management.
+This repo documents the service of user management. 
 ### How to start the service
 ```
 sudo docker-compose up
@@ -28,7 +28,7 @@ sudo docker-compose up
 
 
 ### How to use the service
-* login
+* login 
 ```
 $ curl --header "Content-Type: application/json"   \
 --request POST   \
@@ -47,3 +47,5 @@ http://127.0.0.1:5060/users/auth
     }
 }
 ```
+
+
